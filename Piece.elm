@@ -2,6 +2,7 @@ module Piece exposing (Orientation(..), Piece(..), Shape(..), blockSize, getBloc
 
 import Collage exposing (Form, collage, filled, group, move, moveX, moveY, square)
 import Color exposing (black)
+import Element
 
 
 type Orientation
@@ -29,16 +30,22 @@ blockSize =
     20
 
 
-drawShape : List (List Bool) -> Form
-drawShape rows =
+drawShape : Bool -> List (List Bool) -> Form
+drawShape isMain rows =
     let
+        blockOffset =
+            if isMain == True then
+                0
+            else
+                30
+
         yOffsets =
             List.range 0 3
-                |> List.map (\y -> toFloat y * -blockSize)
+                |> List.map (\y -> toFloat y * -blockSize + blockOffset)
 
         xOffsets =
             List.range 0 3
-                |> List.map (\x -> toFloat x * blockSize)
+                |> List.map (\x -> toFloat x * blockSize - blockOffset)
 
         drawRow row =
             List.concat <|
@@ -47,7 +54,7 @@ drawShape rows =
                         if value then
                             [ moveX offset <| filled black <| square blockSize ]
                         else
-                            []
+                            [ moveX (offset + blockSize) <| Collage.toForm <| Element.empty ]
                     )
                     xOffsets
                     row
@@ -135,20 +142,11 @@ westJShape =
     ]
 
 
-
--- oShape =
---     [ [ True, True, False, False ]
---     , [ True, True, False, False ]
---     , [ False, False, False, False ]
---     , [ False, False, False, False ]
---     ]
-
-
 oShape =
-    [ [ True, True, True, True ]
-    , [ True, True, True, True ]
-    , [ True, True, True, True ]
-    , [ True, True, True, True ]
+    [ [ True, True, False, False ]
+    , [ True, True, False, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
@@ -298,9 +296,9 @@ getShape (Piece shape orientation) =
                 horizontalZShape
 
 
-render : Piece -> Form
-render piece =
-    drawShape <| getShape piece
+render : Bool -> Piece -> Form
+render isMain piece =
+    drawShape isMain <| getShape piece
 
 
 getWidth : Piece -> Int

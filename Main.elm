@@ -34,11 +34,10 @@ fromJust maybe =
 
 pieceGenerator : Random.Generator Piece
 pieceGenerator =
-    Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ OShape ]
+    Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ IShape, JShape, LShape, OShape, SShape, TShape, ZShape ]
 
 
 
---Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ IShape, JShape, LShape, OShape, SShape, TShape, ZShape ]
 -- XXX current speed
 
 
@@ -413,7 +412,7 @@ renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int ) -> Form
 renderBoard currentPiece ( pieceX, pieceY ) fixatedBlocks =
     let
         renderedPiece =
-            Piece.render currentPiece
+            Piece.render True currentPiece
 
         border =
             outlined (solid black) <| rect boardWidth boardHeight
@@ -444,7 +443,7 @@ renderNext nextPiece =
             outlined (solid black) <| rect 100 100
 
         renderedPiece =
-            Piece.render nextPiece
+            Piece.render False nextPiece
     in
     move
         ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50
@@ -461,8 +460,8 @@ renderScore score =
             Collage.text <| Text.fromString <| toString score
     in
     move
-        ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50
-        , toFloat <| halfTotalHeight - boardOffsetY - 50
+        ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 10
+        , toFloat <| halfTotalHeight - boardOffsetY - 110
         )
         renderedScore
 
