@@ -34,10 +34,11 @@ fromJust maybe =
 
 pieceGenerator : Random.Generator Piece
 pieceGenerator =
-    Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ IShape, JShape, LShape, OShape, SShape, TShape, ZShape ]
+    Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ OShape ]
 
 
 
+--Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ IShape, JShape, LShape, OShape, SShape, TShape, ZShape ]
 -- XXX current speed
 
 
@@ -445,7 +446,12 @@ renderNext nextPiece =
         renderedPiece =
             Piece.render nextPiece
     in
-    move ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50, toFloat <| halfTotalHeight - boardOffsetY - 50 ) <| group [ border, renderedPiece ]
+    move
+        ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50
+        , toFloat <| halfTotalHeight - boardOffsetY - 50
+        )
+    <|
+        group [ border, renderedPiece ]
 
 
 renderScore : Int -> Form
@@ -454,7 +460,11 @@ renderScore score =
         renderedScore =
             Collage.text <| Text.fromString <| toString score
     in
-    move ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50, toFloat <| halfTotalHeight - boardOffsetY - 100 - 50 ) renderedScore
+    move
+        ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50
+        , toFloat <| halfTotalHeight - boardOffsetY - 50
+        )
+        renderedScore
 
 
 

@@ -33,10 +33,12 @@ drawShape : List (List Bool) -> Form
 drawShape rows =
     let
         yOffsets =
-            List.map (\x -> toFloat x * -blockSize) <| List.range 0 2
+            List.range 0 3
+                |> List.map (\y -> toFloat y * -blockSize)
 
         xOffsets =
-            List.map (\x -> toFloat x * blockSize) <| List.range 0 2
+            List.range 0 3
+                |> List.map (\x -> toFloat x * blockSize)
 
         drawRow row =
             List.concat <|
@@ -57,132 +59,159 @@ verticalIShape =
     [ [ True, False, False ]
     , [ True, False, False ]
     , [ True, False, False ]
+    , [ True, False, False ]
     ]
 
 
 horizontalIShape =
-    [ [ True, True, True ]
-    , [ False, False, False ]
-    , [ False, False, False ]
+    [ [ True, True, True, True ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 northLShape =
-    [ [ True, False, False ]
-    , [ True, False, False ]
-    , [ True, True, False ]
+    [ [ True, False, False, False ]
+    , [ True, False, False, False ]
+    , [ True, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 eastLShape =
-    [ [ False, False, True ]
-    , [ True, True, True ]
-    , [ False, False, False ]
+    [ [ False, False, True, False ]
+    , [ True, True, True, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 southLShape =
-    [ [ True, True, False ]
-    , [ False, True, False ]
-    , [ False, True, False ]
+    [ [ True, True, False, False ]
+    , [ False, True, False, False ]
+    , [ False, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 westLShape =
-    [ [ True, True, True ]
-    , [ True, False, False ]
-    , [ False, False, False ]
+    [ [ True, True, True, False ]
+    , [ True, False, False, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 northJShape =
-    [ [ False, True, False ]
-    , [ False, True, False ]
-    , [ True, True, False ]
+    [ [ False, True, False, False ]
+    , [ False, True, False, False ]
+    , [ True, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 eastJShape =
-    [ [ True, False, False ]
-    , [ True, True, True ]
-    , [ False, False, False ]
+    [ [ True, False, False, False ]
+    , [ True, True, True, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 southJShape =
-    [ [ True, True, False ]
-    , [ False, True, False ]
-    , [ False, True, False ]
+    [ [ True, True, False, False ]
+    , [ False, True, False, False ]
+    , [ False, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 westJShape =
-    [ [ True, True, True ]
-    , [ True, False, False ]
-    , [ False, False, False ]
+    [ [ True, True, True, False ]
+    , [ True, False, False, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
+
+-- oShape =
+--     [ [ True, True, False, False ]
+--     , [ True, True, False, False ]
+--     , [ False, False, False, False ]
+--     , [ False, False, False, False ]
+--     ]
+
+
 oShape =
-    [ [ True, True, False ]
-    , [ True, True, False ]
-    , [ False, False, False ]
+    [ [ True, True, True, True ]
+    , [ True, True, True, True ]
+    , [ True, True, True, True ]
+    , [ True, True, True, True ]
     ]
 
 
 verticalSShape =
-    [ [ False, True, True ]
-    , [ True, True, False ]
-    , [ False, False, False ]
+    [ [ False, True, True, False ]
+    , [ True, True, False, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 horizontalSShape =
-    [ [ True, False, False ]
-    , [ True, True, False ]
-    , [ False, True, False ]
+    [ [ True, False, False, False ]
+    , [ True, True, False, False ]
+    , [ False, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 northTShape =
-    [ [ True, True, True ]
-    , [ False, True, False ]
-    , [ False, False, False ]
+    [ [ True, True, True, False ]
+    , [ False, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 eastTShape =
-    [ [ True, False, False ]
-    , [ True, True, False ]
-    , [ True, False, False ]
+    [ [ True, False, False, False ]
+    , [ True, True, False, False ]
+    , [ True, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 southTShape =
-    [ [ False, True, False ]
-    , [ True, True, True ]
-    , [ False, False, False ]
+    [ [ False, True, False, False ]
+    , [ True, True, True, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 westTShape =
-    [ [ False, True, False ]
-    , [ True, True, False ]
-    , [ False, True, False ]
+    [ [ False, True, False, False ]
+    , [ True, True, False, False ]
+    , [ False, True, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 verticalZShape =
-    [ [ True, True, False ]
-    , [ False, True, True ]
-    , [ False, False, False ]
+    [ [ True, True, False, False ]
+    , [ False, True, True, False ]
+    , [ False, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
 horizontalZShape =
-    [ [ False, True, False ]
-    , [ True, True, False ]
-    , [ True, False, False ]
+    [ [ False, True, False, False ]
+    , [ True, True, False, False ]
+    , [ True, False, False, False ]
+    , [ False, False, False, False ]
     ]
 
 
@@ -281,7 +310,7 @@ getWidth (Piece shape orientation) =
             if isVertical orientation then
                 1
             else
-                3
+                4
 
         JShape ->
             if isVertical orientation then
