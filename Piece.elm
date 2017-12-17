@@ -2,8 +2,6 @@ module Piece exposing (Orientation(..), Piece(..), Shape(..), blockSize, getBloc
 
 import Collage exposing (Form, collage, filled, group, move, moveX, moveY, square)
 import Color exposing (black)
-import Element
-import Html exposing (Html)
 
 
 type Orientation
