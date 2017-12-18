@@ -97,12 +97,12 @@ update msg model =
                     ( model, Cmd.none )
 
                 _ ->
-                    Error ("Somehow you managed to get a " ++ toString msg ++ " msg in an uninitialized state o_O") ! []
+                    ( Error ("Somehow you managed to get a " ++ toString msg ++ " msg in an uninitialized state o_O"), Cmd.none )
 
         Initialized state ->
             case msg of
                 Initialize _ _ ->
-                    Error "Somehow you managed to get an initialize msg in an initialized state o_O" ! []
+                    ( Error "Somehow you managed to get an initialize msg in an initialized state o_O", Cmd.none )
 
                 NoOp ->
                     ( model, Cmd.none )
@@ -136,7 +136,7 @@ update msg model =
                     ( Initialized { state | nextPiece = piece }, Cmd.none )
 
         Error err ->
-            model ! []
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
