@@ -5,7 +5,6 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
 import Keyboard
 import Random
-import Random.Extra
 import RasterShapes as Raster exposing (Position, Size)
 import Set exposing (Set)
 import Time
@@ -19,21 +18,6 @@ numCols =
 numRows : Int
 numRows =
     20
-
-
-fromJust : Maybe a -> a
-fromJust maybe =
-    case maybe of
-        Just value ->
-            value
-
-        Nothing ->
-            Debug.crash "fromJust given Nothing"
-
-
-pieceGenerator : Random.Generator Piece
-pieceGenerator =
-    Random.map (flip Piece North << fromJust) <| Random.Extra.sample [ IShape, JShape, LShape, OShape, SShape, TShape, ZShape ]
 
 
 
@@ -76,6 +60,11 @@ type Shape
 
 type Piece
     = Piece Shape Orientation
+
+
+pieceGenerator : Random.Generator Piece
+pieceGenerator =
+    Random.map getShapeById (Random.int 0 6)
 
 
 init : ( Model, Cmd Msg )
@@ -756,6 +745,35 @@ getShape (Piece shape orientation) =
                 verticalZShape
             else
                 horizontalZShape
+
+
+getShapeById : Int -> Piece
+getShapeById int =
+    let
+        newShape =
+            case int of
+                0 ->
+                    IShape
+
+                1 ->
+                    JShape
+
+                2 ->
+                    LShape
+
+                3 ->
+                    OShape
+
+                4 ->
+                    SShape
+
+                5 ->
+                    TShape
+
+                _ ->
+                    ZShape
+    in
+    Piece newShape North
 
 
 rotate : Piece -> Piece
