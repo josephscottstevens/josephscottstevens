@@ -1,4 +1,4 @@
-module Piece exposing (Orientation(..), Piece(..), Shape(..), blockSize, getBlocks, getLeftOffset, getRightOffset, rotate)
+module Piece exposing (..)
 
 
 type Orientation
@@ -22,10 +22,7 @@ type Piece
     = Piece Shape Orientation
 
 
-blockSize =
-    10
-
-
+verticalIShape : List (List number)
 verticalIShape =
     [ [ 0, 1, 0, 0 ]
     , [ 0, 1, 0, 0 ]
@@ -34,6 +31,7 @@ verticalIShape =
     ]
 
 
+horizontalIShape : List (List number)
 horizontalIShape =
     [ [ 1, 1, 1, 1 ]
     , [ 0, 0, 0, 0 ]
@@ -42,6 +40,7 @@ horizontalIShape =
     ]
 
 
+northLShape : List (List number)
 northLShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 0, 0, 0 ]
@@ -50,6 +49,7 @@ northLShape =
     ]
 
 
+eastLShape : List (List number)
 eastLShape =
     [ [ 0, 0, 0, 0 ]
     , [ 0, 0, 1, 0 ]
@@ -58,6 +58,7 @@ eastLShape =
     ]
 
 
+southLShape : List (List number)
 southLShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 1, 0, 0 ]
@@ -66,6 +67,7 @@ southLShape =
     ]
 
 
+westLShape : List (List number)
 westLShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 1, 1, 0 ]
@@ -74,6 +76,7 @@ westLShape =
     ]
 
 
+northJShape : List (List number)
 northJShape =
     [ [ 0, 0, 0, 0 ]
     , [ 0, 1, 0, 0 ]
@@ -82,6 +85,7 @@ northJShape =
     ]
 
 
+eastJShape : List (List number)
 eastJShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 0, 0, 0 ]
@@ -90,22 +94,25 @@ eastJShape =
     ]
 
 
+southJShape : List (List number)
 southJShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
     ]
 
 
+westJShape : List (List number)
 westJShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 1, 1, 0 ]
-    , [ 1, 0, 0, 0 ]
+    , [ 0, 0, 1, 0 ]
     , [ 0, 0, 0, 0 ]
     ]
 
 
+oShape : List (List number)
 oShape =
     [ [ 0, 0, 0, 0 ]
     , [ 0, 1, 1, 0 ]
@@ -114,6 +121,7 @@ oShape =
     ]
 
 
+verticalSShape : List (List number)
 verticalSShape =
     [ [ 0, 0, 0, 0 ]
     , [ 0, 1, 1, 0 ]
@@ -122,6 +130,7 @@ verticalSShape =
     ]
 
 
+horizontalSShape : List (List number)
 horizontalSShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 0, 0, 0 ]
@@ -130,6 +139,7 @@ horizontalSShape =
     ]
 
 
+northTShape : List (List number)
 northTShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 1, 1, 0 ]
@@ -138,6 +148,7 @@ northTShape =
     ]
 
 
+eastTShape : List (List number)
 eastTShape =
     [ [ 0, 1, 0, 0 ]
     , [ 0, 1, 1, 0 ]
@@ -146,6 +157,7 @@ eastTShape =
     ]
 
 
+southTShape : List (List number)
 southTShape =
     [ [ 0, 1, 0, 0 ]
     , [ 1, 1, 1, 0 ]
@@ -154,6 +166,7 @@ southTShape =
     ]
 
 
+westTShape : List (List number)
 westTShape =
     [ [ 0, 1, 0, 0 ]
     , [ 1, 1, 0, 0 ]
@@ -162,6 +175,7 @@ westTShape =
     ]
 
 
+verticalZShape : List (List number)
 verticalZShape =
     [ [ 0, 0, 0, 0 ]
     , [ 1, 1, 0, 0 ]
@@ -170,6 +184,7 @@ verticalZShape =
     ]
 
 
+horizontalZShape : List (List number)
 horizontalZShape =
     [ [ 0, 0, 0, 0 ]
     , [ 0, 1, 0, 0 ]
@@ -196,43 +211,27 @@ isVertical orient =
 
 getLeftOffset : Piece -> Int
 getLeftOffset piece =
-    let
-        count =
-            getShape piece
-                |> List.map List.head
-                |> List.map (Maybe.withDefault 0)
-                |> List.sum
-    in
-    if count > 0 then
-        0
-    else
-        1
+    getShape piece
+        |> List.map (\t -> List.indexedMap (,) t)
+        |> List.map (\t -> List.filter (\( a, b ) -> b == 1) t)
+        |> List.map (\t -> List.map Tuple.first t)
+        |> List.map List.head
+        |> List.filterMap identity
+        |> List.minimum
+        |> Maybe.withDefault 0
 
 
 getRightOffset : Piece -> Int
 getRightOffset piece =
-    let
-        count =
-            getShape piece
-                |> List.map List.reverse
-                |> List.map List.head
-                |> List.map (Maybe.withDefault 0)
-                |> List.sum
-
-        count2 =
-            getShape piece
-                |> List.map List.reverse
-                |> List.drop 1
-                |> List.map List.head
-                |> List.map (Maybe.withDefault 0)
-                |> List.sum
-    in
-    if count2 > 0 then
-        2
-    else if count > 0 then
-        1
-    else
-        0
+    getShape piece
+        |> List.map (\t -> List.reverse t)
+        |> List.map (\t -> List.indexedMap (,) t)
+        |> List.map (\t -> List.filter (\( a, b ) -> b == 1) t)
+        |> List.map (\t -> List.map Tuple.first t)
+        |> List.map List.head
+        |> List.filterMap identity
+        |> List.minimum
+        |> Maybe.withDefault 0
 
 
 getShape : Piece -> List (List Int)

@@ -99,7 +99,7 @@ moveCurrentPieceLeft model =
         left =
             Piece.getLeftOffset model.currentPiece
     in
-    if x - left <= 0 then
+    if x + left <= 0 then
         model
     else if anyFixated model -1 then
         model
@@ -116,7 +116,7 @@ moveCurrentPieceRight model =
         right =
             Piece.getRightOffset model.currentPiece
     in
-    if x - right >= numCols then
+    if x + 4 - right >= numCols then
         model
     else if anyFixated model 1 then
         model
