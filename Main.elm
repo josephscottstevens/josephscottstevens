@@ -57,6 +57,27 @@ type Model
     | Error String
 
 
+type Orientation
+    = North
+    | South
+    | East
+    | West
+
+
+type Shape
+    = IShape
+    | JShape
+    | LShape
+    | OShape
+    | SShape
+    | TShape
+    | ZShape
+
+
+type Piece
+    = Piece Shape Orientation
+
+
 init : ( Model, Cmd Msg )
 init =
     ( Uninitialized, Random.generate (uncurry Initialize) <| Random.pair pieceGenerator pieceGenerator )
@@ -171,27 +192,6 @@ main =
         , subscriptions = subscriptions
         , view = view
         }
-
-
-type Orientation
-    = North
-    | South
-    | East
-    | West
-
-
-type Shape
-    = IShape
-    | JShape
-    | LShape
-    | OShape
-    | SShape
-    | TShape
-    | ZShape
-
-
-type Piece
-    = Piece Shape Orientation
 
 
 pxSize : Int -> List Position -> Html Msg
@@ -671,20 +671,17 @@ isVertical orient =
 
 getLeftOffset : Piece -> Int
 getLeftOffset piece =
-    getShape piece
-        |> List.map (\t -> List.indexedMap (,) t)
-        |> List.map (\t -> List.filter (\( _, b ) -> b == 1) t)
-        |> List.map (\t -> List.map Tuple.first t)
-        |> List.map List.head
-        |> List.filterMap identity
-        |> List.minimum
-        |> Maybe.withDefault 0
+    getShape piece |> getOffset
 
 
 getRightOffset : Piece -> Int
 getRightOffset piece =
-    getShape piece
-        |> List.map (\t -> List.reverse t)
+    getShape piece |> List.map (\t -> List.reverse t) |> getOffset
+
+
+getOffset : List (List Int) -> Int
+getOffset list =
+    list
         |> List.map (\t -> List.indexedMap (,) t)
         |> List.map (\t -> List.filter (\( _, b ) -> b == 1) t)
         |> List.map (\t -> List.map Tuple.first t)
