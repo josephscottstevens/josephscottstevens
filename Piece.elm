@@ -1,8 +1,4 @@
-module Piece exposing (Orientation(..), Piece(..), Shape(..), blockSize, getBlocks, getWidth, render, rotate)
-
-import Collage exposing (Form, collage, filled, group, move, moveX, moveY, square)
-import Color exposing (black)
-import Element
+module Piece exposing (Orientation(..), Piece(..), Shape(..), blockSize, getBlocks, getLeftOffset, getRightOffset, rotate)
 
 
 type Orientation
@@ -27,189 +23,158 @@ type Piece
 
 
 blockSize =
-    20
-
-
-drawShape : Bool -> List (List Bool) -> Form
-drawShape isMain rows =
-    let
-        blockOffset =
-            if isMain == True then
-                0
-            else
-                30
-
-        yOffsets =
-            List.range 0 3
-                |> List.map (\y -> toFloat y * -blockSize + blockOffset)
-
-        xOffsets =
-            List.range 0 3
-                |> List.map (\x -> toFloat x * blockSize - blockOffset)
-
-        drawRow row =
-            List.concat <|
-                List.map2
-                    (\offset value ->
-                        if value then
-                            [ moveX offset <| filled black <| square blockSize ]
-                        else
-                            [ moveX (offset + blockSize) <| Collage.toForm <| Element.empty ]
-                    )
-                    xOffsets
-                    row
-    in
-    group <| List.concat <| List.map2 (\row offset -> List.map (moveY <| offset) <| drawRow row) rows yOffsets
+    10
 
 
 verticalIShape =
-    [ [ True, False, False ]
-    , [ True, False, False ]
-    , [ True, False, False ]
-    , [ True, False, False ]
+    [ [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
     ]
 
 
 horizontalIShape =
-    [ [ True, True, True, True ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 1, 1, 1, 1 ]
+    , [ 0, 0, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 northLShape =
-    [ [ True, False, False, False ]
-    , [ True, False, False, False ]
-    , [ True, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
     ]
 
 
 eastLShape =
-    [ [ False, False, True, False ]
-    , [ True, True, True, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 0, 0, 1, 0 ]
+    , [ 1, 1, 1, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 southLShape =
-    [ [ True, True, False, False ]
-    , [ False, True, False, False ]
-    , [ False, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
     ]
 
 
 westLShape =
-    [ [ True, True, True, False ]
-    , [ True, False, False, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 1, 1, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 northJShape =
-    [ [ False, True, False, False ]
-    , [ False, True, False, False ]
-    , [ True, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
     ]
 
 
 eastJShape =
-    [ [ True, False, False, False ]
-    , [ True, True, True, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 1, 1, 1, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 southJShape =
-    [ [ True, True, False, False ]
-    , [ False, True, False, False ]
-    , [ False, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
     ]
 
 
 westJShape =
-    [ [ True, True, True, False ]
-    , [ True, False, False, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 1, 1, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 oShape =
-    [ [ True, True, False, False ]
-    , [ True, True, False, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 0, 1, 1, 0 ]
+    , [ 0, 1, 1, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 verticalSShape =
-    [ [ False, True, True, False ]
-    , [ True, True, False, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 0, 1, 1, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 horizontalSShape =
-    [ [ True, False, False, False ]
-    , [ True, True, False, False ]
-    , [ False, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
     ]
 
 
 northTShape =
-    [ [ True, True, True, False ]
-    , [ False, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 1, 1, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 eastTShape =
-    [ [ True, False, False, False ]
-    , [ True, True, False, False ]
-    , [ True, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 1, 0, 0 ]
+    , [ 0, 1, 1, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 southTShape =
-    [ [ False, True, False, False ]
-    , [ True, True, True, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 1, 0, 0 ]
+    , [ 1, 1, 1, 0 ]
+    , [ 0, 0, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 westTShape =
-    [ [ False, True, False, False ]
-    , [ True, True, False, False ]
-    , [ False, True, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 1, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 verticalZShape =
-    [ [ True, True, False, False ]
-    , [ False, True, True, False ]
-    , [ False, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 0, 1, 1, 0 ]
+    , [ 0, 0, 0, 0 ]
     ]
 
 
 horizontalZShape =
-    [ [ False, True, False, False ]
-    , [ True, True, False, False ]
-    , [ True, False, False, False ]
-    , [ False, False, False, False ]
+    [ [ 0, 0, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 1, 1, 0, 0 ]
+    , [ 1, 0, 0, 0 ]
     ]
 
 
@@ -229,7 +194,48 @@ isVertical orient =
             False
 
 
-getShape : Piece -> List (List Bool)
+getLeftOffset : Piece -> Int
+getLeftOffset piece =
+    let
+        count =
+            getShape piece
+                |> List.map List.head
+                |> List.map (Maybe.withDefault 0)
+                |> List.sum
+    in
+    if count > 0 then
+        0
+    else
+        1
+
+
+getRightOffset : Piece -> Int
+getRightOffset piece =
+    let
+        count =
+            getShape piece
+                |> List.map List.reverse
+                |> List.map List.head
+                |> List.map (Maybe.withDefault 0)
+                |> List.sum
+
+        count2 =
+            getShape piece
+                |> List.map List.reverse
+                |> List.drop 1
+                |> List.map List.head
+                |> List.map (Maybe.withDefault 0)
+                |> List.sum
+    in
+    if count2 > 0 then
+        2
+    else if count > 0 then
+        1
+    else
+        0
+
+
+getShape : Piece -> List (List Int)
 getShape (Piece shape orientation) =
     case shape of
         IShape ->
@@ -296,69 +302,20 @@ getShape (Piece shape orientation) =
                 horizontalZShape
 
 
-render : Bool -> Piece -> Form
-render isMain piece =
-    drawShape isMain <| getShape piece
-
-
-getWidth : Piece -> Int
-getWidth (Piece shape orientation) =
-    case shape of
-        IShape ->
-            if isVertical orientation then
-                1
-            else
-                4
-
-        JShape ->
-            if isVertical orientation then
-                2
-            else
-                3
-
-        LShape ->
-            if isVertical orientation then
-                2
-            else
-                3
-
-        OShape ->
-            2
-
-        SShape ->
-            if isVertical orientation then
-                3
-            else
-                2
-
-        TShape ->
-            if isVertical orientation then
-                3
-            else
-                2
-
-        ZShape ->
-            if isVertical orientation then
-                3
-            else
-                2
-
-
 rotate : Piece -> Piece
 rotate (Piece shape orient) =
-    Debug.log "rotation" <|
-        case orient of
-            North ->
-                Piece shape East
+    case orient of
+        North ->
+            Piece shape East
 
-            East ->
-                Piece shape South
+        East ->
+            Piece shape South
 
-            South ->
-                Piece shape West
+        South ->
+            Piece shape West
 
-            West ->
-                Piece shape North
+        West ->
+            Piece shape North
 
 
 getBlocks : Piece -> List ( Int, Int )
@@ -373,7 +330,7 @@ getBlocks piece =
                 (\y row ->
                     List.indexedMap
                         (\x present ->
-                            if present then
+                            if present == 1 then
                                 [ ( x, y ) ]
                             else
                                 []

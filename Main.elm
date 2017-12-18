@@ -1,16 +1,14 @@
 module Main exposing (..)
 
-import Collage exposing (Form, collage, filled, group, move, outlined, rect, solid, square)
-import Color exposing (black)
 import Dict
-import Element
-import Html exposing (Html, text)
+import Html exposing (Html, div, p, text)
+import Html.Attributes exposing (style)
 import Keyboard
 import Piece exposing (Orientation(..), Piece(..), Shape(..))
 import Random
 import Random.Extra
+import RasterShapes as Raster exposing (Position, Size)
 import Set exposing (Set)
-import Text
 import Time
 
 
@@ -97,8 +95,11 @@ moveCurrentPieceLeft model =
     let
         ( x, y ) =
             model.currentPiecePosition
+
+        left =
+            Piece.getLeftOffset model.currentPiece
     in
-    if x == 0 then
+    if x - left <= 0 then
         model
     else if anyFixated model -1 then
         model
@@ -112,10 +113,10 @@ moveCurrentPieceRight model =
         ( x, y ) =
             model.currentPiecePosition
 
-        width =
-            Piece.getWidth model.currentPiece
+        right =
+            Piece.getRightOffset model.currentPiece
     in
-    if x + width == numCols then
+    if x - right >= numCols then
         model
     else if anyFixated model 1 then
         model
@@ -132,11 +133,11 @@ rotateCurrentPiece model =
         newPiece =
             Piece.rotate model.currentPiece
 
-        newWidth =
-            Piece.getWidth newPiece
+        right =
+            Piece.getRightOffset newPiece
     in
-    if x + newWidth > numCols then
-        { model | currentPiece = newPiece, currentPiecePosition = ( numCols - newWidth, y ) }
+    if x + right > numCols then
+        { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right, y ) }
     else
         { model | currentPiece = newPiece }
 
@@ -364,110 +365,72 @@ subscriptions model =
                 ]
 
 
-boardWidth =
-    Piece.blockSize * numCols
+px : Int -> String
+px i =
+    toString i ++ "px"
 
 
-boardHeight =
-    Piece.blockSize * numRows
+pixel : Int -> Position -> Html Msg
+pixel size { x, y } =
+    div
+        [ style
+            [ ( "background", "#000000" )
+            , ( "width", toString size ++ "px" )
+            , ( "height", toString size ++ "px" )
+            , ( "top", px (y * size) )
+            , ( "left", px (x * size) )
+            , ( "position", "absolute" )
+            ]
+        ]
+        []
 
 
-halfBoardWidth =
-    boardWidth // 2
-
-
-halfBoardHeight =
-    boardHeight // 2
-
-
-totalWidth =
-    600
-
-
-totalHeight =
-    600
-
-
-halfTotalWidth =
-    totalWidth // 2
-
-
-halfTotalHeight =
-    totalHeight // 2
-
-
-boardOffsetX =
-    20
-
-
-boardOffsetY =
-    20
-
-
-
--- one of my best struggles with Collage is that (0, 0) isn't the TL corner
-
-
-renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int ) -> Form
-renderBoard currentPiece ( pieceX, pieceY ) fixatedBlocks =
+renderOutline : List Position
+renderOutline =
     let
-        renderedPiece =
-            Piece.render True currentPiece
+        boardOutline =
+            Raster.rectangle (Size 200 400) (Position 20 20)
 
-        border =
-            outlined (solid black) <| rect boardWidth boardHeight
-
-        boardX =
-            toFloat -(halfTotalWidth - halfBoardWidth - boardOffsetX)
-
-        boardY =
-            toFloat <| halfTotalHeight - halfBoardHeight - boardOffsetY
-
-        positionedPiece =
-            move ( toFloat (-halfBoardWidth + boardOffsetX // 2 + pieceX * Piece.blockSize), toFloat (halfBoardHeight - boardOffsetY // 2 - pieceY * Piece.blockSize) ) renderedPiece
-
-        renderedBlocks =
-            move ( toFloat (-halfBoardWidth + boardOffsetX // 2), toFloat (halfBoardHeight - boardOffsetY // 2) ) <| group <| List.map (\( x, y ) -> move ( toFloat x * Piece.blockSize, toFloat -y * Piece.blockSize ) <| filled black <| square Piece.blockSize) fixatedBlocks
+        nextPieceOutline =
+            Raster.rectangle (Size 80 80) (Position 240 20)
     in
-    move ( boardX, boardY ) <| group [ positionedPiece, border, renderedBlocks ]
+    boardOutline ++ nextPieceOutline
 
 
+renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int ) -> List Position
+renderBoard currentPiece ( curX, curY ) fixatedBlocks =
+    let
+        currentBlock =
+            Piece.getBlocks currentPiece
+                |> List.map (\( x, y ) -> Position (x + curX + 1) (y + curY + 1))
 
--- XXX center within the bordered area
+        blocks =
+            fixatedBlocks
+                |> List.map (\( x, y ) -> Position (x + 1) (y + 1))
+    in
+    currentBlock ++ blocks
 
 
-renderNext : Piece -> Form
+renderNext : Piece -> List Position
 renderNext nextPiece =
-    let
-        border =
-            outlined (solid black) <| rect 100 100
-
-        renderedPiece =
-            Piece.render False nextPiece
-    in
-    move
-        ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 50
-        , toFloat <| halfTotalHeight - boardOffsetY - 50
-        )
-    <|
-        group [ border, renderedPiece ]
-
-
-renderScore : Int -> Form
-renderScore score =
-    let
-        renderedScore =
-            Collage.text <| Text.fromString <| toString score
-    in
-    move
-        ( toFloat <| boardOffsetX + boardWidth + boardOffsetX - halfTotalWidth + 10
-        , toFloat <| halfTotalHeight - boardOffsetY - 110
-        )
-        renderedScore
+    Piece.getBlocks nextPiece
+        |> List.map (\( x, y ) -> Position (x + 12) (y + 1))
 
 
 
+-- renderScore : Int -> List Position
+-- renderScore score =
+--     Raster.circle
+--         5
+--         (Position 20 5)
 -- XXX hardcoded value
+
+
+pxSize : Int -> List Position -> Html Msg
+pxSize size items =
+    items
+        |> List.map (pixel size)
+        |> div []
 
 
 view : Model -> Html Msg
@@ -480,13 +443,16 @@ view model =
             text ""
 
         Initialized state ->
-            Element.toHtml <|
-                collage totalWidth
-                    totalHeight
-                    [ renderBoard state.currentPiece state.currentPiecePosition <| Set.toList state.fixatedBlocks
-                    , renderNext state.nextPiece
-                    , renderScore state.currentScore
-                    ]
+            [ renderOutline
+                |> pxSize 1
+            , renderBoard state.currentPiece state.currentPiecePosition (Set.toList state.fixatedBlocks)
+                |> pxSize 20
+            , renderNext state.nextPiece
+                |> pxSize 20
+
+            --, renderScore state.currentScore <| 2
+            ]
+                |> div []
 
 
 main : Program Never Model Msg
