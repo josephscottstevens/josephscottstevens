@@ -84,7 +84,7 @@ update msg model =
             case msg of
                 Initialize currentPiece nextPiece ->
                     let
-                        model =
+                        newModel =
                             Initialized
                                 { currentScore = 0
                                 , currentPiece = currentPiece
@@ -94,7 +94,7 @@ update msg model =
                                 , dropping = False
                                 }
                     in
-                    ( model, Cmd.none )
+                    ( newModel, Cmd.none )
 
                 _ ->
                     ( Error ("Somehow you managed to get a " ++ toString msg ++ " msg in an uninitialized state o_O"), Cmd.none )
@@ -135,7 +135,7 @@ update msg model =
                 NextPiece piece ->
                     ( Initialized { state | nextPiece = piece }, Cmd.none )
 
-        Error err ->
+        Error _ ->
             ( model, Cmd.none )
 
 
@@ -364,10 +364,6 @@ checkGameOver state =
         GameOver state.currentScore
     else
         Initialized state
-
-
-
--- LTA: why *can't* I have this as a new message?
 
 
 fixateAndAdvance : State -> Model
