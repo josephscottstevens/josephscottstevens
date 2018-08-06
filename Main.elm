@@ -8,6 +8,7 @@ import Random
 import RasterShapes as Raster exposing (Position, Size)
 import Set exposing (Set)
 import Time
+import Piece exposing (..)
 
 
 numCols : Int
@@ -39,32 +40,6 @@ type Model
     | Initialized State
     | GameOver Int
     | Error String
-
-
-type Orientation
-    = North
-    | South
-    | East
-    | West
-
-
-type Shape
-    = IShape
-    | JShape
-    | LShape
-    | OShape
-    | SShape
-    | TShape
-    | ZShape
-
-
-type Piece
-    = Piece Shape Orientation
-
-
-pieceGenerator : Random.Generator Piece
-pieceGenerator =
-    Random.map getShapeById (Random.int 0 6)
 
 
 init : ( Model, Cmd Msg )
@@ -104,7 +79,7 @@ update msg model =
                                 , dropping = False
                                 }
                     in
-                    ( newModel, Cmd.none )
+                        ( newModel, Cmd.none )
 
                 _ ->
                     ( Error ("Somehow you managed to get a " ++ toString msg ++ " msg in an uninitialized state o_O"), Cmd.none )
@@ -131,10 +106,10 @@ update msg model =
                         newState =
                             movePieceDown state
                     in
-                    if detectCollisions newState then
-                        ( fixateAndAdvance state, Random.generate NextPiece pieceGenerator )
-                    else
-                        ( Initialized newState, Cmd.none )
+                        if detectCollisions newState then
+                            ( fixateAndAdvance state, Random.generate NextPiece pieceGenerator )
+                        else
+                            ( Initialized newState, Cmd.none )
 
                 Drop ->
                     ( Initialized { state | dropping = True }, Cmd.none )
@@ -205,7 +180,7 @@ anyFixated state offset =
         blockIsFixated pos =
             Set.member pos state.fixatedBlocks
     in
-    List.any blockIsFixated newBlocks
+        List.any blockIsFixated newBlocks
 
 
 moveCurrentPieceLeft : State -> State
@@ -217,12 +192,12 @@ moveCurrentPieceLeft model =
         left =
             getLeftOffset model.currentPiece
     in
-    if x + left <= 0 then
-        model
-    else if anyFixated model -1 then
-        model
-    else
-        { model | currentPiecePosition = ( x - 1, y ) }
+        if x + left <= 0 then
+            model
+        else if anyFixated model -1 then
+            model
+        else
+            { model | currentPiecePosition = ( x - 1, y ) }
 
 
 moveCurrentPieceRight : State -> State
@@ -234,12 +209,12 @@ moveCurrentPieceRight model =
         right =
             getRightOffset model.currentPiece
     in
-    if x + 4 - right >= numCols then
-        model
-    else if anyFixated model 1 then
-        model
-    else
-        { model | currentPiecePosition = ( x + 1, y ) }
+        if x + 4 - right >= numCols then
+            model
+        else if anyFixated model 1 then
+            model
+        else
+            { model | currentPiecePosition = ( x + 1, y ) }
 
 
 rotateCurrentPiece : State -> State
@@ -250,14 +225,16 @@ rotateCurrentPiece model =
 
         newPiece =
             rotate model.currentPiece
-
-        right =
-            getRightOffset newPiece
     in
-    if x + right > numCols then
-        { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right, y ) }
-    else
-        { model | currentPiece = newPiece }
+        case getRight newPiece of
+            Just right ->
+                if x + right > numCols then
+                    { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right - 1, y ) }
+                else
+                    { model | currentPiece = newPiece }
+
+            Nothing ->
+                Debug.crash "invalid right position!"
 
 
 movePieceDown : State -> State
@@ -266,7 +243,7 @@ movePieceDown state =
         ( x, y ) =
             state.currentPiecePosition
     in
-    { state | currentPiecePosition = ( x, y + 1 ) }
+        { state | currentPiecePosition = ( x, y + 1 ) }
 
 
 translateRelativeTo : ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
@@ -280,7 +257,7 @@ detectCollisions state =
         pieceBlocks =
             List.map (translateRelativeTo state.currentPiecePosition) <| getBlocks state.currentPiece
     in
-    List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point state.fixatedBlocks) pieceBlocks
+        List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point state.fixatedBlocks) pieceBlocks
 
 
 fixate : State -> State
@@ -289,7 +266,7 @@ fixate state =
         pieceBlocks =
             List.map (translateRelativeTo state.currentPiecePosition) <| getBlocks state.currentPiece
     in
-    { state | fixatedBlocks = Set.union state.fixatedBlocks <| Set.fromList pieceBlocks }
+        { state | fixatedBlocks = Set.union state.fixatedBlocks <| Set.fromList pieceBlocks }
 
 
 countBlocksByRow : List ( Int, Int ) -> List ( Int, Int )
@@ -298,7 +275,7 @@ countBlocksByRow blocks =
         incrementCount ( _, row ) countDict =
             Dict.update row (Just << (+) 1 << Maybe.withDefault 0) countDict
     in
-    Dict.toList <| List.foldl incrementCount Dict.empty blocks
+        Dict.toList <| List.foldl incrementCount Dict.empty blocks
 
 
 checkForCompleteRows : State -> State
@@ -321,25 +298,25 @@ checkForCompleteRows state =
         maxCompletedRow =
             List.maximum <| Set.toList completeRows
     in
-    case maxCompletedRow of
-        Nothing ->
-            state
+        case maxCompletedRow of
+            Nothing ->
+                state
 
-        Just maxCompletedRow ->
-            let
-                completedRowsRemoved =
-                    List.filter (\( _, row ) -> not <| Set.member row completeRows) <| Set.toList state.fixatedBlocks
+            Just maxCompletedRow ->
+                let
+                    completedRowsRemoved =
+                        List.filter (\( _, row ) -> not <| Set.member row completeRows) <| Set.toList state.fixatedBlocks
 
-                shiftDown ( x, row ) =
-                    if row < maxCompletedRow then
-                        ( x, row + Set.size completeRows )
-                    else
-                        ( x, row )
+                    shiftDown ( x, row ) =
+                        if row < maxCompletedRow then
+                            ( x, row + Set.size completeRows )
+                        else
+                            ( x, row )
 
-                shiftedRows =
-                    List.map shiftDown completedRowsRemoved
-            in
-            { state | fixatedBlocks = Set.fromList <| shiftedRows, currentScore = state.currentScore + 100 * Set.size completeRows }
+                    shiftedRows =
+                        List.map shiftDown completedRowsRemoved
+                in
+                    { state | fixatedBlocks = Set.fromList <| shiftedRows, currentScore = state.currentScore + 100 * Set.size completeRows }
 
 
 advance : State -> State
@@ -404,11 +381,11 @@ subscriptions model =
                     else
                         Time.second
             in
-            Sub.batch
-                [ Keyboard.downs translateKeyDown
-                , Keyboard.ups translateKeyUp
-                , Time.every tickInterval <| always Tick
-                ]
+                Sub.batch
+                    [ Keyboard.downs translateKeyDown
+                    , Keyboard.ups translateKeyUp
+                    , Time.every tickInterval <| always Tick
+                    ]
 
         Error _ ->
             Sub.none
@@ -448,7 +425,7 @@ renderOutline =
         nextPieceOutline =
             Raster.rectangle (Size 80 80) (Position 240 20)
     in
-    boardOutline ++ nextPieceOutline
+        boardOutline ++ nextPieceOutline
 
 
 renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int ) -> List Position
@@ -462,353 +439,10 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
             fixatedBlocks
                 |> List.map (\( x, y ) -> Position (x + 1) (y + 1))
     in
-    currentBlock ++ blocks
+        currentBlock ++ blocks
 
 
 renderNext : Piece -> List Position
 renderNext nextPiece =
     getBlocks nextPiece
         |> List.map (\( x, y ) -> Position (x + 12) (y + 1))
-
-
-verticalIShape : List (List number)
-verticalIShape =
-    [ [ 0, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    ]
-
-
-horizontalIShape : List (List number)
-horizontalIShape =
-    [ [ 1, 1, 1, 1 ]
-    , [ 0, 0, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-northLShape : List (List number)
-northLShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    ]
-
-
-eastLShape : List (List number)
-eastLShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 0, 0, 1, 0 ]
-    , [ 1, 1, 1, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-southLShape : List (List number)
-southLShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    ]
-
-
-westLShape : List (List number)
-westLShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 1, 1, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-northJShape : List (List number)
-northJShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    ]
-
-
-eastJShape : List (List number)
-eastJShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 1, 1, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-southJShape : List (List number)
-southJShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    ]
-
-
-westJShape : List (List number)
-westJShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 1, 1, 0 ]
-    , [ 0, 0, 1, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-oShape : List (List number)
-oShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 0, 1, 1, 0 ]
-    , [ 0, 1, 1, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-verticalSShape : List (List number)
-verticalSShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 0, 1, 1, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-horizontalSShape : List (List number)
-horizontalSShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    ]
-
-
-northTShape : List (List number)
-northTShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 1, 1, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-eastTShape : List (List number)
-eastTShape =
-    [ [ 0, 1, 0, 0 ]
-    , [ 0, 1, 1, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-southTShape : List (List number)
-southTShape =
-    [ [ 0, 1, 0, 0 ]
-    , [ 1, 1, 1, 0 ]
-    , [ 0, 0, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-westTShape : List (List number)
-westTShape =
-    [ [ 0, 1, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-verticalZShape : List (List number)
-verticalZShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 0, 1, 1, 0 ]
-    , [ 0, 0, 0, 0 ]
-    ]
-
-
-horizontalZShape : List (List number)
-horizontalZShape =
-    [ [ 0, 0, 0, 0 ]
-    , [ 0, 1, 0, 0 ]
-    , [ 1, 1, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    ]
-
-
-isVertical : Orientation -> Bool
-isVertical orient =
-    case orient of
-        North ->
-            True
-
-        South ->
-            True
-
-        East ->
-            False
-
-        West ->
-            False
-
-
-getLeftOffset : Piece -> Int
-getLeftOffset piece =
-    getShape piece |> getOffset
-
-
-getRightOffset : Piece -> Int
-getRightOffset piece =
-    getShape piece |> List.map (\t -> List.reverse t) |> getOffset
-
-
-getOffset : List (List Int) -> Int
-getOffset list =
-    list
-        |> List.map (\t -> List.indexedMap (,) t)
-        |> List.map (\t -> List.filter (\( _, b ) -> b == 1) t)
-        |> List.map (\t -> List.map Tuple.first t)
-        |> List.map List.head
-        |> List.filterMap identity
-        |> List.minimum
-        |> Maybe.withDefault 0
-
-
-getShape : Piece -> List (List Int)
-getShape (Piece shape orientation) =
-    case shape of
-        IShape ->
-            if isVertical orientation then
-                verticalIShape
-            else
-                horizontalIShape
-
-        JShape ->
-            case orientation of
-                North ->
-                    northJShape
-
-                South ->
-                    southJShape
-
-                East ->
-                    eastJShape
-
-                West ->
-                    westJShape
-
-        LShape ->
-            case orientation of
-                North ->
-                    northLShape
-
-                South ->
-                    southLShape
-
-                East ->
-                    eastLShape
-
-                West ->
-                    westLShape
-
-        OShape ->
-            oShape
-
-        SShape ->
-            if isVertical orientation then
-                verticalSShape
-            else
-                horizontalSShape
-
-        TShape ->
-            case orientation of
-                North ->
-                    northTShape
-
-                South ->
-                    southTShape
-
-                East ->
-                    eastTShape
-
-                West ->
-                    westTShape
-
-        ZShape ->
-            if isVertical orientation then
-                verticalZShape
-            else
-                horizontalZShape
-
-
-getShapeById : Int -> Piece
-getShapeById int =
-    let
-        newShape =
-            case int of
-                0 ->
-                    IShape
-
-                1 ->
-                    JShape
-
-                2 ->
-                    LShape
-
-                3 ->
-                    OShape
-
-                4 ->
-                    SShape
-
-                5 ->
-                    TShape
-
-                _ ->
-                    ZShape
-    in
-    Piece newShape North
-
-
-rotate : Piece -> Piece
-rotate (Piece shape orient) =
-    case orient of
-        North ->
-            Piece shape East
-
-        East ->
-            Piece shape South
-
-        South ->
-            Piece shape West
-
-        West ->
-            Piece shape North
-
-
-getBlocks : Piece -> List ( Int, Int )
-getBlocks piece =
-    let
-        shape =
-            getShape piece
-    in
-    List.concat <|
-        List.concat <|
-            List.indexedMap
-                (\y row ->
-                    List.indexedMap
-                        (\x present ->
-                            if present == 1 then
-                                [ ( x, y ) ]
-                            else
-                                []
-                        )
-                        row
-                )
-                shape
