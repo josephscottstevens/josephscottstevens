@@ -364,6 +364,11 @@ translateKeyUp keycode =
         NoOp
 
 
+calcGameSpeed : State -> Float
+calcGameSpeed state =
+    1000.0 - (toFloat state.currentScore / 8.0)
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
@@ -375,11 +380,15 @@ subscriptions model =
 
         Initialized state ->
             let
+                msPerTick =
+                    calcGameSpeed state
+                        |> clamp 250.0 1000.0
+
                 tickInterval =
                     if state.dropping then
-                        Time.second / 20
+                        Time.millisecond * msPerTick / 20
                     else
-                        Time.second
+                        Time.millisecond * msPerTick
             in
                 Sub.batch
                     [ Keyboard.downs translateKeyDown
