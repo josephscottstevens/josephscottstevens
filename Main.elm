@@ -229,7 +229,7 @@ rotateCurrentPiece model =
         case getRight newPiece of
             Just right ->
                 if x + right > numCols then
-                    { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right - 1, y ) }
+                    { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right, y ) }
                 else
                     { model | currentPiece = newPiece }
 
