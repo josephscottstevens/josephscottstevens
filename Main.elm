@@ -171,7 +171,18 @@ view model =
 
                 --20
                 -- TODO: show score
-                --, pixelWithItems 1 (Block 240 110) [ text (toString state.currentScore) ]
+                , pixelWithItems
+                    { x = (blockSize * 10) + 1
+                    , y = blockSize * 0
+                    , width = (blockSize * 5) + 1
+                    , height = blockSize * 1
+                    , color = "white"
+                    }
+                    [ div []
+                        [ text "score"
+                        , text (toString state.currentScore)
+                        ]
+                    ]
                 ]
 
         Error error ->
@@ -490,13 +501,27 @@ renderOutline =
 
         nextPieceOutline =
             { x = (10 * blockSize) + 1
-            , y = 0
-            , width = (blockSize * 4) + 1
-            , height = blockSize * 4
+            , y = blockSize * 1
+            , width = blockSize * 5
+            , height = blockSize * 5
             , color = "white"
             }
     in
         [ boardOutline, nextPieceOutline ]
+
+
+renderNext : Piece -> List Block
+renderNext nextPiece =
+    getBlocks nextPiece
+        |> List.map
+            (\( x, y ) ->
+                { x = ((x + 11) * blockSize) + 1
+                , y = (y * blockSize)
+                , width = blockSize
+                , height = blockSize
+                , color = getColor nextPiece
+                }
+            )
 
 
 renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int, String ) -> List Block
@@ -529,20 +554,6 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
                     )
     in
         currentBlock ++ blocks
-
-
-renderNext : Piece -> List Block
-renderNext nextPiece =
-    getBlocks nextPiece
-        |> List.map
-            (\( x, y ) ->
-                { x = ((x + 10) * blockSize) + 2
-                , y = (y * blockSize)
-                , width = blockSize
-                , height = blockSize
-                , color = getColor nextPiece
-                }
-            )
 
 
 getColor : Piece -> String

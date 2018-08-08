@@ -179,10 +179,10 @@ isVertical orient =
 
 verticalIShape : List (List number)
 verticalIShape =
-    [ [ 1, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
-    , [ 1, 0, 0, 0 ]
+    [ [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
+    , [ 0, 1, 0, 0 ]
     ]
 
 
