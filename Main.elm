@@ -5,7 +5,6 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
 import Keyboard
 import Random
-import RasterShapes as Raster exposing (Position, Size)
 import Set exposing (Set)
 import Time
 import Piece exposing (..)
@@ -21,6 +20,11 @@ numRows =
     20
 
 
+blockSize : Int
+blockSize =
+    20
+
+
 
 -- XXX current speed
 
@@ -32,6 +36,15 @@ type alias State =
     , nextPiece : Piece
     , fixatedBlocks : Set ( Int, Int, String )
     , dropping : Bool
+    }
+
+
+type alias Block =
+    { x : Int
+    , y : Int
+    , width : Int
+    , height : Int
+    , color : String
     }
 
 
@@ -141,7 +154,9 @@ view model =
                     |> pxSize 20
                 , renderNext state.nextPiece
                     |> pxSize 20
-                , pixelWithItems 1 (Position 240 110) [ text (toString state.currentScore) ]
+
+                -- TODO: show score
+                --, pixelWithItems 1 (Block 240 110) [ text (toString state.currentScore) ]
                 ]
 
         Error error ->
@@ -158,7 +173,7 @@ main =
         }
 
 
-pxSize : Int -> List Position -> Html Msg
+pxSize : Int -> List Block -> Html Msg
 pxSize size items =
     items
         |> List.map (pixel size)
@@ -424,57 +439,95 @@ px i =
     toString i ++ "px"
 
 
-pixel : Int -> Position -> Html msg
+pixel : Int -> Block -> Html msg
 pixel size position =
     pixelWithItems size position []
 
 
-pixelWithItems : Int -> Position -> List (Html msg) -> Html msg
-pixelWithItems size { x, y } t =
+pixelWithItems : Int -> Block -> List (Html msg) -> Html msg
+pixelWithItems size { x, y, width, height, color } t =
+    -- todo, use width height
     div
         [ style
-            [ ( "background", "#000000" )
-            , ( "width", toString size ++ "px" )
+            [ ( "width", toString size ++ "px" )
             , ( "height", toString size ++ "px" )
             , ( "top", px (y * size) )
             , ( "left", px (x * size) )
             , ( "position", "absolute" )
+            , ( "background", color )
+            , ( "background-color", color )
+            , ( "color", color )
             ]
         ]
         t
 
 
-renderOutline : List Position
+renderOutline : List Block
 renderOutline =
     let
         boardOutline =
-            Raster.rectangle (Size 200 400) (Position 20 20)
+            { x = 20
+            , y = 20
+            , width = 200
+            , height = 400
+            , color = "black"
+            }
 
         nextPieceOutline =
-            Raster.rectangle (Size 80 80) (Position 240 20)
+            { x = 240
+            , y = 20
+            , width = 80
+            , height = 80
+            , color = "black"
+            }
     in
-        boardOutline ++ nextPieceOutline
+        [ boardOutline, nextPieceOutline ]
 
 
-renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int, String ) -> List Position
+renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int, String ) -> List Block
 renderBoard currentPiece ( curX, curY ) fixatedBlocks =
     let
+        currentBlock : List Block
         currentBlock =
             getBlocks currentPiece
-                |> List.map (\( x, y ) -> Position (x + curX + 1) (y + curY + 1))
+                |> List.map
+                    (\( x, y ) ->
+                        { x = (x + curX + 1)
+                        , y = (y + curY + 1)
+                        , width = blockSize
+                        , height = blockSize
+                        , color = getColor currentPiece
+                        }
+                    )
 
+        blocks : List Block
         blocks =
             fixatedBlocks
-                -- TODO: Color needs to be used
-                |> List.map (\( x, y, color ) -> Position (x + 1) (y + 1))
+                |> List.map
+                    (\( x, y, color ) ->
+                        { x = (x + 1)
+                        , y = (y + 1)
+                        , width = blockSize
+                        , height = blockSize
+                        , color = color
+                        }
+                    )
     in
         currentBlock ++ blocks
 
 
-renderNext : Piece -> List Position
+renderNext : Piece -> List Block
 renderNext nextPiece =
     getBlocks nextPiece
-        |> List.map (\( x, y ) -> Position (x + 12) (y + 1))
+        |> List.map
+            (\( x, y ) ->
+                { x = x + 12
+                , y = y + 1
+                , width = blockSize
+                , height = blockSize
+                , color = getColor nextPiece
+                }
+            )
 
 
 getColor : Piece -> String
