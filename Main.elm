@@ -149,12 +149,17 @@ view model =
         Initialized state ->
             div []
                 [ renderOutline
-                    |> pxSize 1
-                , renderBoard state.currentPiece state.currentPiecePosition (Set.toList state.fixatedBlocks)
-                    |> pxSize 20
-                , renderNext state.nextPiece
-                    |> pxSize 20
+                    |> pxSize
 
+                --1
+                , renderBoard state.currentPiece state.currentPiecePosition (Set.toList state.fixatedBlocks)
+                    |> pxSize
+
+                --20
+                , renderNext state.nextPiece
+                    |> pxSize
+
+                --20
                 -- TODO: show score
                 --, pixelWithItems 1 (Block 240 110) [ text (toString state.currentScore) ]
                 ]
@@ -173,10 +178,10 @@ main =
         }
 
 
-pxSize : Int -> List Block -> Html Msg
-pxSize size items =
+pxSize : List Block -> Html Msg
+pxSize items =
     items
-        |> List.map (pixel size)
+        |> List.map pixel
         |> div []
 
 
@@ -439,24 +444,25 @@ px i =
     toString i ++ "px"
 
 
-pixel : Int -> Block -> Html msg
-pixel size position =
-    pixelWithItems size position []
+pixel : Block -> Html msg
+pixel block =
+    pixelWithItems block []
 
 
-pixelWithItems : Int -> Block -> List (Html msg) -> Html msg
-pixelWithItems size { x, y, width, height, color } t =
+pixelWithItems : Block -> List (Html msg) -> Html msg
+pixelWithItems { x, y, width, height, color } t =
     -- todo, use width height
     div
         [ style
-            [ ( "width", toString size ++ "px" )
-            , ( "height", toString size ++ "px" )
-            , ( "top", px (y * size) )
-            , ( "left", px (x * size) )
+            [ ( "width", toString (width - 2) ++ "px" )
+            , ( "height", toString (height - 2) ++ "px" )
+            , ( "top", px (y * height) )
+            , ( "left", px (x * width) )
             , ( "position", "absolute" )
             , ( "background", color )
-            , ( "background-color", color )
-            , ( "color", color )
+            , ( "border-width", "1px" )
+            , ( "border-style", "solid" )
+            , ( "border-color", "greeen" )
             ]
         ]
         t
@@ -466,16 +472,16 @@ renderOutline : List Block
 renderOutline =
     let
         boardOutline =
-            { x = 20
-            , y = 20
-            , width = 200
-            , height = 400
-            , color = "black"
+            { x = 0
+            , y = 0
+            , width = 10 * blockSize
+            , height = 21 * blockSize
+            , color = "red"
             }
 
         nextPieceOutline =
-            { x = 240
-            , y = 20
+            { x = 1
+            , y = 1
             , width = 80
             , height = 80
             , color = "black"
