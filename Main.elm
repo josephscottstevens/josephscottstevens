@@ -8,54 +8,8 @@ import Random
 import Set exposing (Set)
 import Time
 import Piece exposing (..)
-
-
-numCols : Int
-numCols =
-    10
-
-
-numRows : Int
-numRows =
-    20
-
-
-blockSize : Int
-blockSize =
-    30
-
-
-offsetX : Int
-offsetX =
-    blockSize
-
-
-offsetY : Int
-offsetY =
-    blockSize
-
-
-
--- XXX current speed
-
-
-type alias State =
-    { currentScore : Int
-    , currentPiece : Piece
-    , currentPiecePosition : ( Int, Int )
-    , nextPiece : Piece
-    , fixatedBlocks : Set ( Int, Int, String )
-    , dropping : Bool
-    }
-
-
-type alias Block =
-    { x : Int
-    , y : Int
-    , width : Int
-    , height : Int
-    , color : String
-    }
+import Draw exposing (game)
+import State exposing (..)
 
 
 type Model
@@ -157,33 +111,7 @@ view model =
             text ""
 
         Initialized state ->
-            div []
-                [ renderOutline
-                    |> pxSize
-
-                --1
-                , renderBoard state.currentPiece state.currentPiecePosition (Set.toList state.fixatedBlocks)
-                    |> pxSize
-
-                --20
-                , renderNext state.nextPiece
-                    |> pxSize
-
-                --20
-                -- TODO: show score
-                , pixelWithItems
-                    { x = (blockSize * 10) + 1
-                    , y = blockSize * 0
-                    , width = (blockSize * 5) + 1
-                    , height = blockSize * 1
-                    , color = "white"
-                    }
-                    [ div []
-                        [ text "score"
-                        , text (toString state.currentScore)
-                        ]
-                    ]
-                ]
+            Draw.game state
 
         Error error ->
             div [] [ text error ]
@@ -197,13 +125,6 @@ main =
         , subscriptions = subscriptions
         , view = view
         }
-
-
-pxSize : List Block -> Html Msg
-pxSize items =
-    items
-        |> List.map pixel
-        |> div []
 
 
 anyFixated : State -> Int -> Bool
@@ -458,124 +379,3 @@ subscriptions model =
 
         Error _ ->
             Sub.none
-
-
-px : Int -> String
-px i =
-    toString i ++ "px"
-
-
-pixel : Block -> Html msg
-pixel block =
-    pixelWithItems block []
-
-
-pixelWithItems : Block -> List (Html msg) -> Html msg
-pixelWithItems { x, y, width, height, color } children =
-    div
-        [ style
-            [ ( "width", toString width ++ "px" )
-            , ( "height", toString height ++ "px" )
-            , ( "left", px (x + offsetX) )
-            , ( "top", px (y + offsetY) )
-            , ( "position", "absolute" )
-            , ( "background", color )
-            , ( "outline-width", "1px" )
-            , ( "outline-style", "solid" )
-            , ( "outline-color", "black" )
-            ]
-        ]
-        children
-
-
-renderOutline : List Block
-renderOutline =
-    let
-        boardOutline =
-            { x = 0
-            , y = 0
-            , width = 10 * blockSize
-            , height = 20 * blockSize
-            , color = "white"
-            }
-
-        nextPieceOutline =
-            { x = (10 * blockSize) + 1
-            , y = blockSize * 1
-            , width = blockSize * 5
-            , height = blockSize * 5
-            , color = "white"
-            }
-    in
-        [ boardOutline, nextPieceOutline ]
-
-
-renderNext : Piece -> List Block
-renderNext nextPiece =
-    getBlocks nextPiece
-        |> List.map
-            (\( x, y ) ->
-                { x = ((x + 11) * blockSize) + 1
-                , y = (y * blockSize)
-                , width = blockSize
-                , height = blockSize
-                , color = getColor nextPiece
-                }
-            )
-
-
-renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int, String ) -> List Block
-renderBoard currentPiece ( curX, curY ) fixatedBlocks =
-    let
-        currentBlock : List Block
-        currentBlock =
-            getBlocks currentPiece
-                |> List.map
-                    (\( x, y ) ->
-                        { x = (x + curX) * blockSize
-                        , y = (y + curY) * blockSize
-                        , width = blockSize
-                        , height = blockSize
-                        , color = getColor currentPiece
-                        }
-                    )
-
-        blocks : List Block
-        blocks =
-            fixatedBlocks
-                |> List.map
-                    (\( x, y, color ) ->
-                        { x = x * blockSize
-                        , y = y * blockSize
-                        , width = blockSize
-                        , height = blockSize
-                        , color = color
-                        }
-                    )
-    in
-        currentBlock ++ blocks
-
-
-getColor : Piece -> String
-getColor piece =
-    case piece of
-        Piece IShape _ ->
-            "rgb(0, 240, 240)"
-
-        Piece JShape _ ->
-            "rgb(240, 160, 0)"
-
-        Piece LShape _ ->
-            "rgb(0, 0, 240)"
-
-        Piece OShape _ ->
-            "rgb(240, 240, 0)"
-
-        Piece SShape _ ->
-            "rgb(0, 240, 0)"
-
-        Piece TShape _ ->
-            "rgb(160, 0, 240)"
-
-        Piece ZShape _ ->
-            "rgb(240, 0, 0)"

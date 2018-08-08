@@ -94,6 +94,31 @@ getOffset list =
         |> Maybe.withDefault 0
 
 
+getColor : Piece -> String
+getColor piece =
+    case piece of
+        Piece IShape _ ->
+            "rgb(0, 240, 240)"
+
+        Piece JShape _ ->
+            "rgb(240, 160, 0)"
+
+        Piece LShape _ ->
+            "rgb(0, 0, 240)"
+
+        Piece OShape _ ->
+            "rgb(240, 240, 0)"
+
+        Piece SShape _ ->
+            "rgb(0, 240, 0)"
+
+        Piece TShape _ ->
+            "rgb(160, 0, 240)"
+
+        Piece ZShape _ ->
+            "rgb(240, 0, 0)"
+
+
 getShape : Piece -> List (List Int)
 getShape (Piece shape orientation) =
     case shape of
