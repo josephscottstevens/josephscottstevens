@@ -456,8 +456,8 @@ pixelWithItems { x, y, width, height, color } t =
         [ style
             [ ( "width", toString (width - 2) ++ "px" )
             , ( "height", toString (height - 2) ++ "px" )
-            , ( "top", px (y * height) )
-            , ( "left", px (x * width) )
+            , ( "left", px x )
+            , ( "top", px y )
             , ( "position", "absolute" )
             , ( "background", color )
             , ( "border-width", "1px" )
@@ -475,16 +475,16 @@ renderOutline =
             { x = 0
             , y = 0
             , width = 10 * blockSize
-            , height = 21 * blockSize
-            , color = "red"
+            , height = 20 * blockSize
+            , color = "white"
             }
 
         nextPieceOutline =
-            { x = 1
-            , y = 1
+            { x = 10 * blockSize - 1
+            , y = 0
             , width = 80
             , height = 80
-            , color = "black"
+            , color = "white"
             }
     in
         [ boardOutline, nextPieceOutline ]
@@ -498,8 +498,8 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
             getBlocks currentPiece
                 |> List.map
                     (\( x, y ) ->
-                        { x = (x + curX + 1)
-                        , y = (y + curY + 1)
+                        { x = (x + curX) * blockSize
+                        , y = (y + curY) * blockSize
                         , width = blockSize
                         , height = blockSize
                         , color = getColor currentPiece
@@ -511,8 +511,8 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
             fixatedBlocks
                 |> List.map
                     (\( x, y, color ) ->
-                        { x = (x + 1)
-                        , y = (y + 1)
+                        { x = x * blockSize
+                        , y = y * blockSize
                         , width = blockSize
                         , height = blockSize
                         , color = color
@@ -527,8 +527,8 @@ renderNext nextPiece =
     getBlocks nextPiece
         |> List.map
             (\( x, y ) ->
-                { x = x + 12
-                , y = y + 1
+                { x = (x + 10) * blockSize
+                , y = y * blockSize
                 , width = blockSize
                 , height = blockSize
                 , color = getColor nextPiece
