@@ -22,7 +22,17 @@ numRows =
 
 blockSize : Int
 blockSize =
-    20
+    30
+
+
+offsetX : Int
+offsetX =
+    blockSize
+
+
+offsetY : Int
+offsetY =
+    blockSize
 
 
 
@@ -450,22 +460,21 @@ pixel block =
 
 
 pixelWithItems : Block -> List (Html msg) -> Html msg
-pixelWithItems { x, y, width, height, color } t =
-    -- todo, use width height
+pixelWithItems { x, y, width, height, color } children =
     div
         [ style
-            [ ( "width", toString (width - 2) ++ "px" )
-            , ( "height", toString (height - 2) ++ "px" )
-            , ( "left", px x )
-            , ( "top", px y )
+            [ ( "width", toString width ++ "px" )
+            , ( "height", toString height ++ "px" )
+            , ( "left", px (x + offsetX) )
+            , ( "top", px (y + offsetY) )
             , ( "position", "absolute" )
             , ( "background", color )
-            , ( "border-width", "1px" )
-            , ( "border-style", "solid" )
-            , ( "border-color", "greeen" )
+            , ( "outline-width", "1px" )
+            , ( "outline-style", "solid" )
+            , ( "outline-color", "black" )
             ]
         ]
-        t
+        children
 
 
 renderOutline : List Block
@@ -480,10 +489,10 @@ renderOutline =
             }
 
         nextPieceOutline =
-            { x = 10 * blockSize - 1
+            { x = (10 * blockSize) + 1
             , y = 0
-            , width = 80
-            , height = 80
+            , width = (blockSize * 4) + 1
+            , height = blockSize * 4
             , color = "white"
             }
     in
@@ -527,8 +536,8 @@ renderNext nextPiece =
     getBlocks nextPiece
         |> List.map
             (\( x, y ) ->
-                { x = (x + 10) * blockSize
-                , y = y * blockSize
+                { x = ((x + 10) * blockSize) + 2
+                , y = (y * blockSize)
                 , width = blockSize
                 , height = blockSize
                 , color = getColor nextPiece
@@ -540,22 +549,22 @@ getColor : Piece -> String
 getColor piece =
     case piece of
         Piece IShape _ ->
-            "red"
+            "rgb(0, 240, 240)"
 
         Piece JShape _ ->
-            "yellow"
+            "rgb(240, 160, 0)"
 
         Piece LShape _ ->
-            "green"
+            "rgb(0, 0, 240)"
 
         Piece OShape _ ->
-            "pink"
+            "rgb(240, 240, 0)"
 
         Piece SShape _ ->
-            "teal"
+            "rgb(0, 240, 0)"
 
         Piece TShape _ ->
-            "orange"
+            "rgb(160, 0, 240)"
 
         Piece ZShape _ ->
-            "blue"
+            "rgb(240, 0, 0)"
