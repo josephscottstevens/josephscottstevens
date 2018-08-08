@@ -30,7 +30,7 @@ type alias State =
     , currentPiece : Piece
     , currentPiecePosition : ( Int, Int )
     , nextPiece : Piece
-    , fixatedBlocks : Set ( Int, Int )
+    , fixatedBlocks : Set ( Int, Int, String )
     , dropping : Bool
     }
 
@@ -174,11 +174,17 @@ anyFixated state offset =
         ( cx, cy ) =
             state.currentPiecePosition
 
+        newBlocks : List ( Int, Int )
         newBlocks =
             List.map (\( x, y ) -> ( x + offset + cx, y + cy )) blocks
 
+        fixatedBlocksXY : Set ( Int, Int )
+        fixatedBlocksXY =
+            state.fixatedBlocks
+                |> Set.map (\( x, y, _ ) -> ( x, y ))
+
         blockIsFixated pos =
-            Set.member pos state.fixatedBlocks
+            Set.member pos fixatedBlocksXY
     in
         List.any blockIsFixated newBlocks
 
@@ -256,15 +262,22 @@ detectCollisions state =
     let
         pieceBlocks =
             List.map (translateRelativeTo state.currentPiecePosition) <| getBlocks state.currentPiece
+
+        fixatedBlocksXY =
+            state.fixatedBlocks
+                |> Set.map (\( x, y, _ ) -> ( x, y ))
     in
-        List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point state.fixatedBlocks) pieceBlocks
+        List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point fixatedBlocksXY) pieceBlocks
 
 
 fixate : State -> State
 fixate state =
     let
         pieceBlocks =
-            List.map (translateRelativeTo state.currentPiecePosition) <| getBlocks state.currentPiece
+            state.currentPiece
+                |> getBlocks
+                |> List.map (translateRelativeTo state.currentPiecePosition)
+                |> List.map (\( x, y ) -> ( x, y, getColor state.currentPiece ))
     in
         { state | fixatedBlocks = Set.union state.fixatedBlocks <| Set.fromList pieceBlocks }
 
@@ -282,7 +295,10 @@ checkForCompleteRows : State -> State
 checkForCompleteRows state =
     let
         blockCounts =
-            countBlocksByRow <| Set.toList state.fixatedBlocks
+            state.fixatedBlocks
+                |> Set.toList
+                |> List.map (\( x, y, _ ) -> ( x, y ))
+                |> countBlocksByRow
 
         completeRows =
             Set.fromList <|
@@ -304,14 +320,17 @@ checkForCompleteRows state =
 
             Just maxCompletedRow ->
                 let
+                    completedRowsRemoved : List ( Int, Int, String )
                     completedRowsRemoved =
-                        List.filter (\( _, row ) -> not <| Set.member row completeRows) <| Set.toList state.fixatedBlocks
+                        state.fixatedBlocks
+                            |> Set.toList
+                            |> List.filter (\( _, row, _ ) -> not <| Set.member row completeRows)
 
-                    shiftDown ( x, row ) =
+                    shiftDown ( x, row, color ) =
                         if row < maxCompletedRow then
-                            ( x, row + Set.size completeRows )
+                            ( x, row + Set.size completeRows, color )
                         else
-                            ( x, row )
+                            ( x, row, color )
 
                     shiftedRows =
                         List.map shiftDown completedRowsRemoved
@@ -437,7 +456,7 @@ renderOutline =
         boardOutline ++ nextPieceOutline
 
 
-renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int ) -> List Position
+renderBoard : Piece -> ( Int, Int ) -> List ( Int, Int, String ) -> List Position
 renderBoard currentPiece ( curX, curY ) fixatedBlocks =
     let
         currentBlock =
@@ -446,7 +465,8 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
 
         blocks =
             fixatedBlocks
-                |> List.map (\( x, y ) -> Position (x + 1) (y + 1))
+                -- TODO: Color needs to be used
+                |> List.map (\( x, y, color ) -> Position (x + 1) (y + 1))
     in
         currentBlock ++ blocks
 
@@ -455,3 +475,28 @@ renderNext : Piece -> List Position
 renderNext nextPiece =
     getBlocks nextPiece
         |> List.map (\( x, y ) -> Position (x + 12) (y + 1))
+
+
+getColor : Piece -> String
+getColor piece =
+    case piece of
+        Piece IShape _ ->
+            "red"
+
+        Piece JShape _ ->
+            "yellow"
+
+        Piece LShape _ ->
+            "green"
+
+        Piece OShape _ ->
+            "pink"
+
+        Piece SShape _ ->
+            "teal"
+
+        Piece TShape _ ->
+            "orange"
+
+        Piece ZShape _ ->
+            "blue"
