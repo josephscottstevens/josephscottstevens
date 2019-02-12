@@ -21,7 +21,7 @@ That being said, that conversation has a very high chance of going poorly. You s
 
 * **Language \ Framework wars:**  
 Talking about what language is good, and what language is bad is likely to spark an argument that is based on internal values, and is unlikely to produce any positive results. *Here are some specific callouts.*  
-1. As a developer, we should also not recommend languages with particularly bad reputations, such as PHP, Cobal, C++, C or Visual Basic. For largely political reasons, and also some decent technical reasons as well.  
+1. As a developer, we should also not recommend languages with particularly bad reputations, such as PHP, COBOL, C++, C or Visual Basic. For largely political reasons, and also some decent technical reasons as well.  
 2. We also should never recommend Angular to any clients. For nothing other than the reason that the version changes are frequent, non back-wards compatible and unless your company is willing to pay for a large re-write, you will get stuck on a later version. And once you aren't on the latest version, you are a working on a legacy tech stack, which sucks.
 
 * **What language is best?**
@@ -34,3 +34,8 @@ Developers rarely have the chance to influence these choices, that being said, w
 * **Project Complexity:**
 The complexity of a project is some combination of how well maintained the codebase is, how skilled the programmers were, and how much effort was put into keeping the code base simple. That being said, those are minor players when it comes to complexity.  
 Project complexity down to how much debugging work has to be done to get a feature shipped and tested. The difficulty of that debugging is based on how many shared referenced to mutable things there are. If you pass an object to a function, and that function mutates something. You have added 1 point to complexity, the more connected and shared those references are, the faster the exponential nature of complexity arises.
+
+* **Purpose Statement:** 
+As a dev, generally devs are part of a team, within an organization. The success of the organization is with its devs and vice/versa. Success is built on stable growth. Stability is built on retention of good talent. Good talent stays when they are happy. People are generally happy when they are growing towards their goal and are recognized. Its important to ask questions others organizations are incapable of asking for a developer contracter is capable of moving its resources so that the resources can grow and have opportunities for recognition. 
+
+There needs to be a bi-annual statement that is a statement FROM the developer. The first open question is "What is your purpose here?". Its a statement to get the expectation the developer has of oneself and career during their tenure at the organization. The second question is "What is stopping you from your purpose here?". This is to determine what the organization can feasibly do for the developer for retentention purposes. There is potential to ask yes/no questions following these statements, "Do you have what you need to meet your purpose?", "Are you on the right track for your purpose?", and "Are you being recognized for your work?". The questions should make the developer feel comfortable that the organization is intent on knowing what drives the developer and if there's anything the organization can do to make the develoepr content. The yes/no questions should exact the feeling at the moment after asking the question whether the organization should take immediate action. 
