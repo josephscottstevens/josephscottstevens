@@ -1,7 +1,6 @@
-module Piece exposing (..)
+module Piece exposing (Orientation(..), Piece(..), Shape(..), eastJShape, eastLShape, eastTShape, getBlocks, getColor, getLeftOffset, getOffset, getRight, getRightOffset, getShape, getShapeById, horizontalIShape, horizontalSShape, horizontalZShape, isVertical, northJShape, northLShape, northTShape, oShape, pieceGenerator, rotate, southJShape, southLShape, southTShape, verticalIShape, verticalSShape, verticalZShape, westJShape, westLShape, westTShape)
 
 import Random
-import List.Extra as List
 
 
 type Orientation
@@ -47,28 +46,29 @@ getBlocks piece =
         shape =
             getShape piece
     in
+    List.concat <|
         List.concat <|
-            List.concat <|
-                List.indexedMap
-                    (\y row ->
-                        List.indexedMap
-                            (\x present ->
-                                if present == 1 then
-                                    [ ( x, y ) ]
-                                else
-                                    []
-                            )
-                            row
-                    )
-                    shape
+            List.indexedMap
+                (\y row ->
+                    List.indexedMap
+                        (\x present ->
+                            if present == 1 then
+                                [ ( x, y ) ]
+
+                            else
+                                []
+                        )
+                        row
+                )
+                shape
 
 
 getRight : Piece -> Maybe Int
 getRight piece =
     piece
         |> getBlocks
-        |> List.maximumBy (\( x, y ) -> x)
-        |> Maybe.map Tuple.first
+        |> List.map Tuple.first
+        |> List.maximum
         |> Maybe.map (\t -> t + 1)
 
 
@@ -85,7 +85,7 @@ getRightOffset piece =
 getOffset : List (List Int) -> Int
 getOffset list =
     list
-        |> List.map (\t -> List.indexedMap (,) t)
+        |> List.map (\t -> List.indexedMap Tuple.pair t)
         |> List.map (\t -> List.filter (\( _, b ) -> b == 1) t)
         |> List.map (\t -> List.map Tuple.first t)
         |> List.map List.head
@@ -125,6 +125,7 @@ getShape (Piece shape orientation) =
         IShape ->
             if isVertical orientation then
                 verticalIShape
+
             else
                 horizontalIShape
 
@@ -162,6 +163,7 @@ getShape (Piece shape orientation) =
         SShape ->
             if isVertical orientation then
                 verticalSShape
+
             else
                 horizontalSShape
 
@@ -182,6 +184,7 @@ getShape (Piece shape orientation) =
         ZShape ->
             if isVertical orientation then
                 verticalZShape
+
             else
                 horizontalZShape
 
@@ -408,4 +411,4 @@ getShapeById int =
                 _ ->
                     ZShape
     in
-        Piece newShape North
+    Piece newShape North

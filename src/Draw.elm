@@ -1,10 +1,10 @@
-module Draw exposing (..)
+module Draw exposing (game, pixel, pixelWithItems, px, pxSize, renderBoard, renderNext, renderOutline)
 
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
-import State exposing (..)
-import Set exposing (Set)
 import Piece exposing (..)
+import Set exposing (Set)
+import State exposing (..)
 
 
 game : State -> Html msg
@@ -24,12 +24,10 @@ game state =
             , color = "white"
             }
             [ div
-                [ style
-                    [ ( "margin-top", "5px" )
-                    , ( "margin-left", px (blockSize * 1) )
-                    ]
+                [ style "margin-top" "5px"
+                , style "margin-left" (px (blockSize * 1))
                 ]
-                [ text ("SCORE: " ++ (toString state.currentScore))
+                [ text ("SCORE: " ++ String.fromInt state.currentScore)
                 ]
             ]
         ]
@@ -54,7 +52,7 @@ renderOutline =
             , color = "white"
             }
     in
-        [ boardOutline, nextPieceOutline ]
+    [ boardOutline, nextPieceOutline ]
 
 
 renderNext : Piece -> List Block
@@ -63,7 +61,7 @@ renderNext nextPiece =
         |> List.map
             (\( x, y ) ->
                 { x = ((x + 11) * blockSize) + 1
-                , y = ((y + 1) * blockSize)
+                , y = (y + 1) * blockSize
                 , width = blockSize
                 , height = blockSize
                 , color = getColor nextPiece
@@ -100,7 +98,7 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
                         }
                     )
     in
-        currentBlock ++ blocks
+    currentBlock ++ blocks
 
 
 
@@ -109,7 +107,7 @@ renderBoard currentPiece ( curX, curY ) fixatedBlocks =
 
 px : Int -> String
 px i =
-    toString i ++ "px"
+    String.fromInt i ++ "px"
 
 
 pixel : Block -> Html msg
@@ -127,16 +125,14 @@ pxSize items =
 pixelWithItems : Block -> List (Html msg) -> Html msg
 pixelWithItems { x, y, width, height, color } children =
     div
-        [ style
-            [ ( "width", toString width ++ "px" )
-            , ( "height", toString height ++ "px" )
-            , ( "left", px (x + offsetX) )
-            , ( "top", px (y + offsetY) )
-            , ( "position", "absolute" )
-            , ( "background", color )
-            , ( "outline-width", "1px" )
-            , ( "outline-style", "solid" )
-            , ( "outline-color", "black" )
-            ]
+        [ style "width" (String.fromInt width ++ "px")
+        , style "height" (String.fromInt height ++ "px")
+        , style "left" (px (x + offsetX))
+        , style "top" (px (y + offsetY))
+        , style "position" "absolute"
+        , style "background" color
+        , style "outline-width" "1px"
+        , style "outline-style" "solid"
+        , style "outline-color" "black"
         ]
         children

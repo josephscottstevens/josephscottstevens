@@ -1,15 +1,26 @@
 module Main exposing (main)
 
+import Browser
 import Dict
+import Draw
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (style)
-import Keyboard
+import Html.Events as Events
+import Json.Decode as Json
+import Piece exposing (Piece)
 import Random
 import Set exposing (Set)
+import State exposing (State, numCols, numRows)
 import Time
-import Piece exposing (..)
-import Draw exposing (game)
-import State exposing (..)
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 type Model
@@ -19,15 +30,19 @@ type Model
     | Error String
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Uninitialized, Random.generate (uncurry Initialize) <| Random.pair pieceGenerator pieceGenerator )
+uncurry : (a -> b -> c) -> ( a, b ) -> c
+uncurry f ( a, b ) =
+    f a b
+
+
+init _ =
+    ( Uninitialized, Random.generate (uncurry Initialize) <| Random.pair Piece.pieceGenerator Piece.pieceGenerator )
 
 
 type Msg
-    = Initialize Piece Piece
+    = Tick
+    | Initialize Piece Piece
     | NextPiece Piece
-    | Tick
     | MoveLeft
     | MoveRight
     | Drop
@@ -56,10 +71,10 @@ update msg model =
                                 , dropping = False
                                 }
                     in
-                        ( newModel, Cmd.none )
+                    ( newModel, Cmd.none )
 
                 _ ->
-                    ( Error ("Somehow you managed to get a " ++ toString msg ++ " msg in an uninitialized state o_O"), Cmd.none )
+                    ( Error "Somehow you managed to get a  msg in an uninitialized state o_O", Cmd.none )
 
         Initialized state ->
             case msg of
@@ -83,10 +98,11 @@ update msg model =
                         newState =
                             movePieceDown state
                     in
-                        if detectCollisions newState then
-                            ( fixateAndAdvance state, Random.generate NextPiece pieceGenerator )
-                        else
-                            ( Initialized newState, Cmd.none )
+                    if detectCollisions newState then
+                        ( fixateAndAdvance state, Random.generate NextPiece Piece.pieceGenerator )
+
+                    else
+                        ( Initialized newState, Cmd.none )
 
                 Drop ->
                     ( Initialized { state | dropping = True }, Cmd.none )
@@ -103,35 +119,30 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    case model of
-        GameOver score ->
-            text <| "Game over! Your score was " ++ toString score
+    div
+        [ Events.on "keyup" (Json.map translateKeyUp Events.keyCode)
+        , Events.on "keydown" (Json.map translateKeyDown Events.keyCode)
+        ]
+        [ case model of
+            GameOver score ->
+                text <| "Game over! Your score was " ++ String.fromInt score
 
-        Uninitialized ->
-            text ""
+            Uninitialized ->
+                text ""
 
-        Initialized state ->
-            Draw.game state
+            Initialized state ->
+                Draw.game state
 
-        Error error ->
-            div [] [ text error ]
-
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { init = init
-        , update = update
-        , subscriptions = subscriptions
-        , view = view
-        }
+            Error error ->
+                div [] [ text error ]
+        ]
 
 
 anyFixated : State -> Int -> Bool
 anyFixated state offset =
     let
         blocks =
-            getBlocks state.currentPiece
+            Piece.getBlocks state.currentPiece
 
         ( cx, cy ) =
             state.currentPiecePosition
@@ -148,7 +159,7 @@ anyFixated state offset =
         blockIsFixated pos =
             Set.member pos fixatedBlocksXY
     in
-        List.any blockIsFixated newBlocks
+    List.any blockIsFixated newBlocks
 
 
 moveCurrentPieceLeft : State -> State
@@ -158,14 +169,16 @@ moveCurrentPieceLeft model =
             model.currentPiecePosition
 
         left =
-            getLeftOffset model.currentPiece
+            Piece.getLeftOffset model.currentPiece
     in
-        if x + left <= 0 then
-            model
-        else if anyFixated model -1 then
-            model
-        else
-            { model | currentPiecePosition = ( x - 1, y ) }
+    if x + left <= 0 then
+        model
+
+    else if anyFixated model -1 then
+        model
+
+    else
+        { model | currentPiecePosition = ( x - 1, y ) }
 
 
 moveCurrentPieceRight : State -> State
@@ -175,14 +188,16 @@ moveCurrentPieceRight model =
             model.currentPiecePosition
 
         right =
-            getRightOffset model.currentPiece
+            Piece.getRightOffset model.currentPiece
     in
-        if x + 4 - right >= numCols then
-            model
-        else if anyFixated model 1 then
-            model
-        else
-            { model | currentPiecePosition = ( x + 1, y ) }
+    if x + 4 - right >= numCols then
+        model
+
+    else if anyFixated model 1 then
+        model
+
+    else
+        { model | currentPiecePosition = ( x + 1, y ) }
 
 
 rotateCurrentPiece : State -> State
@@ -192,17 +207,18 @@ rotateCurrentPiece model =
             model.currentPiecePosition
 
         newPiece =
-            rotate model.currentPiece
+            Piece.rotate model.currentPiece
     in
-        case getRight newPiece of
-            Just right ->
-                if x + right > numCols then
-                    { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right, y ) }
-                else
-                    { model | currentPiece = newPiece }
+    case Piece.getRight newPiece of
+        Just right ->
+            if x + right > numCols then
+                { model | currentPiece = newPiece, currentPiecePosition = ( numCols - right, y ) }
 
-            Nothing ->
-                Debug.crash "invalid right position!"
+            else
+                { model | currentPiece = newPiece }
+
+        Nothing ->
+            Debug.todo "invalid right position!"
 
 
 movePieceDown : State -> State
@@ -211,7 +227,7 @@ movePieceDown state =
         ( x, y ) =
             state.currentPiecePosition
     in
-        { state | currentPiecePosition = ( x, y + 1 ) }
+    { state | currentPiecePosition = ( x, y + 1 ) }
 
 
 translateRelativeTo : ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
@@ -223,13 +239,13 @@ detectCollisions : State -> Bool
 detectCollisions state =
     let
         pieceBlocks =
-            List.map (translateRelativeTo state.currentPiecePosition) <| getBlocks state.currentPiece
+            List.map (translateRelativeTo state.currentPiecePosition) <| Piece.getBlocks state.currentPiece
 
         fixatedBlocksXY =
             state.fixatedBlocks
                 |> Set.map (\( x, y, _ ) -> ( x, y ))
     in
-        List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point fixatedBlocksXY) pieceBlocks
+    List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point fixatedBlocksXY) pieceBlocks
 
 
 fixate : State -> State
@@ -237,11 +253,11 @@ fixate state =
     let
         pieceBlocks =
             state.currentPiece
-                |> getBlocks
+                |> Piece.getBlocks
                 |> List.map (translateRelativeTo state.currentPiecePosition)
-                |> List.map (\( x, y ) -> ( x, y, getColor state.currentPiece ))
+                |> List.map (\( x, y ) -> ( x, y, Piece.getColor state.currentPiece ))
     in
-        { state | fixatedBlocks = Set.union state.fixatedBlocks <| Set.fromList pieceBlocks }
+    { state | fixatedBlocks = Set.union state.fixatedBlocks <| Set.fromList pieceBlocks }
 
 
 countBlocksByRow : List ( Int, Int ) -> List ( Int, Int )
@@ -250,7 +266,7 @@ countBlocksByRow blocks =
         incrementCount ( _, row ) countDict =
             Dict.update row (Just << (+) 1 << Maybe.withDefault 0) countDict
     in
-        Dict.toList <| List.foldl incrementCount Dict.empty blocks
+    Dict.toList <| List.foldl incrementCount Dict.empty blocks
 
 
 checkForCompleteRows : State -> State
@@ -268,36 +284,35 @@ checkForCompleteRows state =
                     (\( row, count ) ->
                         if count == numCols then
                             Just row
+
                         else
                             Nothing
                     )
                     blockCounts
-
-        maxCompletedRow =
-            List.maximum <| Set.toList completeRows
     in
-        case maxCompletedRow of
-            Nothing ->
-                state
+    case List.maximum <| Set.toList completeRows of
+        Nothing ->
+            state
 
-            Just maxCompletedRow ->
-                let
-                    completedRowsRemoved : List ( Int, Int, String )
-                    completedRowsRemoved =
-                        state.fixatedBlocks
-                            |> Set.toList
-                            |> List.filter (\( _, row, _ ) -> not <| Set.member row completeRows)
+        Just maxCompletedRow ->
+            let
+                completedRowsRemoved : List ( Int, Int, String )
+                completedRowsRemoved =
+                    state.fixatedBlocks
+                        |> Set.toList
+                        |> List.filter (\( _, row, _ ) -> not <| Set.member row completeRows)
 
-                    shiftDown ( x, row, color ) =
-                        if row < maxCompletedRow then
-                            ( x, row + Set.size completeRows, color )
-                        else
-                            ( x, row, color )
+                shiftDown ( x, row, color ) =
+                    if row < maxCompletedRow then
+                        ( x, row + Set.size completeRows, color )
 
-                    shiftedRows =
-                        List.map shiftDown completedRowsRemoved
-                in
-                    { state | fixatedBlocks = Set.fromList <| shiftedRows, currentScore = state.currentScore + 100 * Set.size completeRows }
+                    else
+                        ( x, row, color )
+
+                shiftedRows =
+                    List.map shiftDown completedRowsRemoved
+            in
+            { state | fixatedBlocks = Set.fromList <| shiftedRows, currentScore = state.currentScore + 100 * Set.size completeRows }
 
 
 advance : State -> State
@@ -309,6 +324,7 @@ checkGameOver : State -> Model
 checkGameOver state =
     if detectCollisions state then
         GameOver state.currentScore
+
     else
         Initialized state
 
@@ -318,29 +334,31 @@ fixateAndAdvance state =
     checkGameOver <| advance <| checkForCompleteRows <| fixate <| state
 
 
-translateKeyDown : Keyboard.KeyCode -> Msg
+translateKeyDown : Int -> Msg
 translateKeyDown keycode =
-    case keycode of
-        38 ->
-            Rotate
+    Debug.log ("key translate" ++ String.fromInt keycode) <|
+        case keycode of
+            38 ->
+                Rotate
 
-        40 ->
-            Drop
+            40 ->
+                Drop
 
-        37 ->
-            MoveLeft
+            37 ->
+                MoveLeft
 
-        39 ->
-            MoveRight
+            39 ->
+                MoveRight
 
-        _ ->
-            NoOp
+            _ ->
+                NoOp
 
 
-translateKeyUp : Keyboard.KeyCode -> Msg
+translateKeyUp : Int -> Msg
 translateKeyUp keycode =
     if keycode == 40 then
         StopDrop
+
     else
         NoOp
 
@@ -367,15 +385,14 @@ subscriptions model =
 
                 tickInterval =
                     if state.dropping then
-                        Time.millisecond * msPerTick / 20
+                        msPerTick / 20
+
                     else
-                        Time.millisecond * msPerTick
+                        msPerTick
             in
-                Sub.batch
-                    [ Keyboard.downs translateKeyDown
-                    , Keyboard.ups translateKeyUp
-                    , Time.every tickInterval <| always Tick
-                    ]
+            Sub.batch
+                [ Time.every tickInterval <| always Tick
+                ]
 
         Error _ ->
             Sub.none

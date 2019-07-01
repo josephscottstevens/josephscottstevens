@@ -1,8 +1,7 @@
-module State exposing (..)
+module State exposing (Block, State, blockSize, numCols, numRows, offsetX, offsetY)
 
 import Piece exposing (Piece)
 import Set exposing (Set)
-
 
 numCols : Int
 numCols =
