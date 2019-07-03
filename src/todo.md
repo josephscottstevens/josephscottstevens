@@ -1,0 +1,1 @@
+Initial pieces aren't random

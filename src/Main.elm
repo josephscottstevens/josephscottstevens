@@ -6,7 +6,6 @@ import Dict
 import Draw exposing (px)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
-import Html.Events as Events
 import Json.Decode as Json
 import Keyboard
 import Piece exposing (Piece)
@@ -66,7 +65,6 @@ type Msg
     = Tick
     | Initialize Piece Piece
     | NextPiece Piece
-    | NoOp
     | KeyUp Keyboard.Direction
     | KeyDown Keyboard.Direction
 
@@ -82,9 +80,6 @@ update msg model =
               }
             , Cmd.none
             )
-
-        NoOp ->
-            ( model, Cmd.none )
 
         Tick ->
             let
