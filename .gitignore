@@ -4,8 +4,3 @@ node_modules
 elm-stuff
 # elm-repl generated files
 repl-temp-*
-# IntelliJ specific stuff
-.idea
-.idea/josephscottstevens.iml
-.idea/modules.xml
-.idea/vcs.xml
