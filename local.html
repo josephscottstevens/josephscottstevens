@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Main</title>
+</head>
+<body>
+<div class="container" id="elmContainer">
+  <div id="elm"></div>
+</div>
+<script type="text/javascript" src="index.js"></script>
+<script>
+  var node = document.getElementById('elm');
+  var app = Elm.Main.init({
+    node: node,
+    flags: 1
+  });
+</script>
+</body>
+</html>

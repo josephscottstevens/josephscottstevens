@@ -1,19 +1,21 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Events
 import Dict
-import Draw
+import Draw exposing (px)
 import Html exposing (Html, div, text)
+import Html.Attributes exposing (style)
 import Html.Events as Events
 import Json.Decode as Json
+import Keyboard
 import Piece exposing (Piece)
 import Random
 import Set exposing (Set)
-import State exposing (State, numCols, numRows)
+import State exposing (blockSize, numCols, numRows)
 import Time
 
 
-main : Program () Model Msg
 main =
     Browser.element
         { init = init
@@ -23,9 +25,20 @@ main =
         }
 
 
-type Model
+type alias Model =
+    { currentScore : Int
+    , currentPiece : Piece
+    , currentPiecePosition : ( Int, Int )
+    , nextPiece : Piece
+    , fixatedBlocks : Set ( Int, Int, String )
+    , dropping : Bool
+    , state : State
+    }
+
+
+type State
     = Uninitialized
-    | Initialized State
+    | Initialized
     | GameOver Int
     | Error String
 
@@ -35,110 +48,122 @@ uncurry f ( a, b ) =
     f a b
 
 
+init : Int -> ( Model, Cmd Msg )
 init _ =
-    ( Uninitialized, Random.generate (uncurry Initialize) <| Random.pair Piece.pieceGenerator Piece.pieceGenerator )
+    ( { currentScore = 0
+      , currentPiece = Piece.startingPiece
+      , currentPiecePosition = ( 0, 0 )
+      , nextPiece = Piece.startingPiece
+      , fixatedBlocks = Set.empty
+      , dropping = False
+      , state = Uninitialized
+      }
+    , Random.generate (uncurry Initialize) <| Random.pair Piece.pieceGenerator Piece.pieceGenerator
+    )
 
 
 type Msg
     = Tick
     | Initialize Piece Piece
     | NextPiece Piece
-    | MoveLeft
-    | MoveRight
-    | Drop
-    | StopDrop
-    | Rotate
     | NoOp
+    | KeyUp Keyboard.Direction
+    | KeyDown Keyboard.Direction
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case model of
-        GameOver _ ->
+    case msg of
+        Initialize currentPiece nextPiece ->
+            ( { model
+                | currentPiece = currentPiece
+                , nextPiece = nextPiece
+                , state = Initialized
+              }
+            , Cmd.none
+            )
+
+        NoOp ->
             ( model, Cmd.none )
 
-        Uninitialized ->
-            case msg of
-                Initialize currentPiece nextPiece ->
-                    let
-                        newModel =
-                            Initialized
-                                { currentScore = 0
-                                , currentPiece = currentPiece
-                                , currentPiecePosition = ( 0, 0 )
-                                , nextPiece = nextPiece
-                                , fixatedBlocks = Set.empty
-                                , dropping = False
-                                }
-                    in
-                    ( newModel, Cmd.none )
+        Tick ->
+            let
+                newModel =
+                    movePieceDown model
+            in
+            if detectCollisions newModel then
+                ( fixateAndAdvance model, Random.generate NextPiece Piece.pieceGenerator )
+
+            else
+                ( newModel, Cmd.none )
+
+        NextPiece piece ->
+            ( { model | nextPiece = piece }, Cmd.none )
+
+        KeyUp direction ->
+            case direction of
+                Keyboard.Down ->
+                    ( { model | dropping = False }, Cmd.none )
 
                 _ ->
-                    ( Error "Somehow you managed to get a  msg in an uninitialized state o_O", Cmd.none )
-
-        Initialized state ->
-            case msg of
-                Initialize _ _ ->
-                    ( Error "Somehow you managed to get an initialize msg in an initialized state o_O", Cmd.none )
-
-                NoOp ->
                     ( model, Cmd.none )
 
-                MoveLeft ->
-                    ( Initialized <| moveCurrentPieceLeft state, Cmd.none )
+        KeyDown direction ->
+            case direction of
+                Keyboard.Up ->
+                    ( rotateCurrentPiece model, Cmd.none )
 
-                MoveRight ->
-                    ( Initialized <| moveCurrentPieceRight state, Cmd.none )
+                Keyboard.Right ->
+                    ( moveCurrentPieceRight model, Cmd.none )
 
-                Rotate ->
-                    ( Initialized <| rotateCurrentPiece state, Cmd.none )
+                Keyboard.Left ->
+                    ( moveCurrentPieceLeft model, Cmd.none )
 
-                Tick ->
-                    let
-                        newState =
-                            movePieceDown state
-                    in
-                    if detectCollisions newState then
-                        ( fixateAndAdvance state, Random.generate NextPiece Piece.pieceGenerator )
+                Keyboard.Down ->
+                    ( { model | dropping = True }, Cmd.none )
 
-                    else
-                        ( Initialized newState, Cmd.none )
-
-                Drop ->
-                    ( Initialized { state | dropping = True }, Cmd.none )
-
-                StopDrop ->
-                    ( Initialized { state | dropping = False }, Cmd.none )
-
-                NextPiece piece ->
-                    ( Initialized { state | nextPiece = piece }, Cmd.none )
-
-        Error _ ->
-            ( model, Cmd.none )
+                Keyboard.Unknown ->
+                    ( model, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
-    div
-        [ Events.on "keyup" (Json.map translateKeyUp Events.keyCode)
-        , Events.on "keydown" (Json.map translateKeyDown Events.keyCode)
-        ]
-        [ case model of
-            GameOver score ->
-                text <| "Game over! Your score was " ++ String.fromInt score
+    case model.state of
+        GameOver score ->
+            text <| "Game over! Your score was " ++ String.fromInt score
 
-            Uninitialized ->
-                text ""
+        Uninitialized ->
+            text ""
 
-            Initialized state ->
-                Draw.game state
+        Initialized ->
+            div []
+                [ Draw.renderOutline
+                    |> Draw.pxSize
+                , Draw.renderBoard model.currentPiece model.currentPiecePosition (Set.toList model.fixatedBlocks)
+                    |> Draw.pxSize
+                , Draw.renderNext model.nextPiece
+                    |> Draw.pxSize
+                , Draw.pixelWithItems
+                    { x = (blockSize * 10) + 1
+                    , y = blockSize * 0
+                    , width = (blockSize * 5) + 1
+                    , height = blockSize * 1
+                    , color = "white"
+                    }
+                    [ div
+                        [ style "margin-top" "5px"
+                        , style "margin-left" (px (blockSize * 1))
+                        ]
+                        [ text ("SCORE: " ++ String.fromInt model.currentScore)
+                        ]
+                    ]
+                ]
 
-            Error error ->
-                div [] [ text error ]
-        ]
+        Error error ->
+            div [] [ text error ]
 
 
-anyFixated : State -> Int -> Bool
+anyFixated : Model -> Int -> Bool
 anyFixated state offset =
     let
         blocks =
@@ -162,7 +187,7 @@ anyFixated state offset =
     List.any blockIsFixated newBlocks
 
 
-moveCurrentPieceLeft : State -> State
+moveCurrentPieceLeft : Model -> Model
 moveCurrentPieceLeft model =
     let
         ( x, y ) =
@@ -181,7 +206,7 @@ moveCurrentPieceLeft model =
         { model | currentPiecePosition = ( x - 1, y ) }
 
 
-moveCurrentPieceRight : State -> State
+moveCurrentPieceRight : Model -> Model
 moveCurrentPieceRight model =
     let
         ( x, y ) =
@@ -200,7 +225,7 @@ moveCurrentPieceRight model =
         { model | currentPiecePosition = ( x + 1, y ) }
 
 
-rotateCurrentPiece : State -> State
+rotateCurrentPiece : Model -> Model
 rotateCurrentPiece model =
     let
         ( x, y ) =
@@ -221,7 +246,7 @@ rotateCurrentPiece model =
             Debug.todo "invalid right position!"
 
 
-movePieceDown : State -> State
+movePieceDown : Model -> Model
 movePieceDown state =
     let
         ( x, y ) =
@@ -235,7 +260,7 @@ translateRelativeTo ( dx, dy ) ( x, y ) =
     ( dx + x, dy + y )
 
 
-detectCollisions : State -> Bool
+detectCollisions : Model -> Bool
 detectCollisions state =
     let
         pieceBlocks =
@@ -248,7 +273,7 @@ detectCollisions state =
     List.any (\( _, y ) -> y >= numRows) pieceBlocks || List.any (\point -> Set.member point fixatedBlocksXY) pieceBlocks
 
 
-fixate : State -> State
+fixate : Model -> Model
 fixate state =
     let
         pieceBlocks =
@@ -269,7 +294,7 @@ countBlocksByRow blocks =
     Dict.toList <| List.foldl incrementCount Dict.empty blocks
 
 
-checkForCompleteRows : State -> State
+checkForCompleteRows : Model -> Model
 checkForCompleteRows state =
     let
         blockCounts =
@@ -315,84 +340,41 @@ checkForCompleteRows state =
             { state | fixatedBlocks = Set.fromList <| shiftedRows, currentScore = state.currentScore + 100 * Set.size completeRows }
 
 
-advance : State -> State
+advance : Model -> Model
 advance state =
     { state | currentPiece = state.nextPiece, currentPiecePosition = ( 0, 0 ) }
 
 
-checkGameOver : State -> Model
-checkGameOver state =
-    if detectCollisions state then
-        GameOver state.currentScore
+fixateAndAdvance : Model -> Model
+fixateAndAdvance model =
+    if detectCollisions model then
+        { model | state = GameOver model.currentScore }
 
     else
-        Initialized state
+        advance <| checkForCompleteRows <| fixate <| model
 
 
-fixateAndAdvance : State -> Model
-fixateAndAdvance state =
-    checkGameOver <| advance <| checkForCompleteRows <| fixate <| state
-
-
-translateKeyDown : Int -> Msg
-translateKeyDown keycode =
-    Debug.log ("key translate" ++ String.fromInt keycode) <|
-        case keycode of
-            38 ->
-                Rotate
-
-            40 ->
-                Drop
-
-            37 ->
-                MoveLeft
-
-            39 ->
-                MoveRight
-
-            _ ->
-                NoOp
-
-
-translateKeyUp : Int -> Msg
-translateKeyUp keycode =
-    if keycode == 40 then
-        StopDrop
-
-    else
-        NoOp
-
-
-calcGameSpeed : State -> Float
+calcGameSpeed : Model -> Float
 calcGameSpeed state =
     1000.0 - (toFloat state.currentScore / 8.0)
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model of
-        Uninitialized ->
-            Sub.none
+    let
+        msPerTick =
+            calcGameSpeed model
+                |> clamp 250.0 1000.0
 
-        GameOver _ ->
-            Sub.none
+        tickInterval =
+            if model.dropping then
+                msPerTick / 20
 
-        Initialized state ->
-            let
-                msPerTick =
-                    calcGameSpeed state
-                        |> clamp 250.0 1000.0
-
-                tickInterval =
-                    if state.dropping then
-                        msPerTick / 20
-
-                    else
-                        msPerTick
-            in
-            Sub.batch
-                [ Time.every tickInterval <| always Tick
-                ]
-
-        Error _ ->
-            Sub.none
+            else
+                msPerTick
+    in
+    Sub.batch
+        [ Time.every tickInterval <| always Tick
+        , Browser.Events.onKeyDown (Json.map KeyDown Keyboard.keyDecoder)
+        , Browser.Events.onKeyUp (Json.map KeyUp Keyboard.keyDecoder)
+        ]

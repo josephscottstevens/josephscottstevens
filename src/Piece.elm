@@ -1,4 +1,4 @@
-module Piece exposing (Orientation(..), Piece(..), Shape(..), eastJShape, eastLShape, eastTShape, getBlocks, getColor, getLeftOffset, getOffset, getRight, getRightOffset, getShape, getShapeById, horizontalIShape, horizontalSShape, horizontalZShape, isVertical, northJShape, northLShape, northTShape, oShape, pieceGenerator, rotate, southJShape, southLShape, southTShape, verticalIShape, verticalSShape, verticalZShape, westJShape, westLShape, westTShape)
+module Piece exposing (Orientation(..), Piece(..), Shape(..), eastJShape, startingPiece, eastLShape, eastTShape, getBlocks, getColor, getLeftOffset, getOffset, getRight, getRightOffset, getShape, getShapeById, horizontalIShape, horizontalSShape, horizontalZShape, isVertical, northJShape, northLShape, northTShape, oShape, pieceGenerator, rotate, southJShape, southLShape, southTShape, verticalIShape, verticalSShape, verticalZShape, westJShape, westLShape, westTShape)
 
 import Random
 
@@ -23,6 +23,9 @@ type Shape
 type Piece
     = Piece Shape Orientation
 
+startingPiece : Piece
+startingPiece =
+    Piece OShape West
 
 rotate : Piece -> Piece
 rotate (Piece shape orient) =

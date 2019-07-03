@@ -1,37 +1,9 @@
-module Draw exposing (game, pixel, pixelWithItems, px, pxSize, renderBoard, renderNext, renderOutline)
+module Draw exposing (pixel, pixelWithItems, px, pxSize, renderBoard, renderNext, renderOutline)
 
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
 import Piece exposing (..)
-import Set exposing (Set)
 import State exposing (..)
-
-
-game : State -> Html msg
-game state =
-    div []
-        [ renderOutline
-            |> pxSize
-        , renderBoard state.currentPiece state.currentPiecePosition (Set.toList state.fixatedBlocks)
-            |> pxSize
-        , renderNext state.nextPiece
-            |> pxSize
-        , pixelWithItems
-            { x = (blockSize * 10) + 1
-            , y = blockSize * 0
-            , width = (blockSize * 5) + 1
-            , height = blockSize * 1
-            , color = "white"
-            }
-            [ div
-                [ style "margin-top" "5px"
-                , style "margin-left" (px (blockSize * 1))
-                ]
-                [ text ("SCORE: " ++ String.fromInt state.currentScore)
-                ]
-            ]
-        ]
-
 
 renderOutline : List Block
 renderOutline =

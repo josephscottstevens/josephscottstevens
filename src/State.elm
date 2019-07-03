@@ -1,7 +1,5 @@
-module State exposing (Block, State, blockSize, numCols, numRows, offsetX, offsetY)
+module State exposing (Block, blockSize, numCols, numRows, offsetX, offsetY)
 
-import Piece exposing (Piece)
-import Set exposing (Set)
 
 numCols : Int
 numCols =
@@ -26,17 +24,6 @@ offsetX =
 offsetY : Int
 offsetY =
     blockSize
-
-
-type alias State =
-    { currentScore : Int
-    , currentPiece : Piece
-    , currentPiecePosition : ( Int, Int )
-    , nextPiece : Piece
-    , fixatedBlocks : Set ( Int, Int, String )
-    , dropping : Bool
-    }
-
 
 type alias Block =
     { x : Int
