@@ -2,31 +2,34 @@ module Keyboard exposing (Direction(..), keyDecoder)
 
 import Json.Decode as Decode
 
+
 type Direction
-  = Left
-  | Right
-  | Down
-  | Up
-  | Unknown
+    = Left
+    | Right
+    | Down
+    | Up
+    | Unknown
+
 
 keyDecoder : Decode.Decoder Direction
 keyDecoder =
-  Decode.map toDirection (Decode.field "key" Decode.string)
+    Decode.map toDirection (Decode.field "key" Decode.string)
+
 
 toDirection : String -> Direction
 toDirection string =
-  case string of
-    "ArrowLeft" ->
-      Left
+    case string of
+        "ArrowLeft" ->
+            Left
 
-    "ArrowRight" ->
-      Right
+        "ArrowRight" ->
+            Right
 
-    "ArrowDown" ->
-      Down
+        "ArrowDown" ->
+            Down
 
-    "ArrowUp" ->
-      Up
+        "ArrowUp" ->
+            Up
 
-    _ ->
-      Unknown
+        _ ->
+            Unknown

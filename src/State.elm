@@ -25,6 +25,7 @@ offsetY : Int
 offsetY =
     blockSize
 
+
 type alias Block =
     { x : Int
     , y : Int

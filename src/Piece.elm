@@ -1,4 +1,4 @@
-module Piece exposing (Orientation(..), Piece(..), Shape(..), eastJShape, startingPiece, eastLShape, eastTShape, getBlocks, getColor, getLeftOffset, getOffset, getRight, getRightOffset, getShape, getShapeById, horizontalIShape, horizontalSShape, horizontalZShape, isVertical, northJShape, northLShape, northTShape, oShape, pieceGenerator, rotate, southJShape, southLShape, southTShape, verticalIShape, verticalSShape, verticalZShape, westJShape, westLShape, westTShape)
+module Piece exposing (Orientation(..), Piece(..), Shape(..), eastJShape, eastLShape, eastTShape, getBlocks, getColor, getLeftOffset, getOffset, getRight, getRightOffset, getShape, getShapeById, horizontalIShape, horizontalSShape, horizontalZShape, isVertical, northJShape, northLShape, northTShape, oShape, pieceGenerator, rotate, southJShape, southLShape, southTShape, startingPiece, verticalIShape, verticalSShape, verticalZShape, westJShape, westLShape, westTShape)
 
 import Random
 
@@ -23,9 +23,11 @@ type Shape
 type Piece
     = Piece Shape Orientation
 
+
 startingPiece : Piece
 startingPiece =
     Piece OShape West
+
 
 rotate : Piece -> Piece
 rotate (Piece shape orient) =
@@ -43,6 +45,15 @@ rotate (Piece shape orient) =
             Piece shape North
 
 
+isPresent : Int -> Int -> Int -> List ( Int, Int )
+isPresent x y present =
+    if present == 1 then
+        [ ( x, y ) ]
+
+    else
+        []
+
+
 getBlocks : Piece -> List ( Int, Int )
 getBlocks piece =
     let
@@ -55,11 +66,7 @@ getBlocks piece =
                 (\y row ->
                     List.indexedMap
                         (\x present ->
-                            if present == 1 then
-                                [ ( x, y ) ]
-
-                            else
-                                []
+                            isPresent x y present
                         )
                         row
                 )

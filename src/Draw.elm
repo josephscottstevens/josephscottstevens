@@ -5,6 +5,7 @@ import Html.Attributes exposing (style)
 import Piece exposing (..)
 import State exposing (..)
 
+
 renderOutline : List Block
 renderOutline =
     let
