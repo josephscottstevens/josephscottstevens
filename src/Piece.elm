@@ -18,6 +18,7 @@ type Shape
     | SShape
     | TShape
     | ZShape
+    | XShape
 
 
 type Piece
