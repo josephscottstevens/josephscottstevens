@@ -6,22 +6,24 @@
 </head>
 <body>
 <div class="container" id="elmContainer">
-  <div id="elm"></div>
-</div>
-<div class="test">
-  <div>
+  <div id="elm">
     <div>
-      <input id="textPrompt" type="text">
+      <div>
+        <button onclick="playGame()">Play Game</button>
+        <input id="textPrompt" type="text">
+      </div>
     </div>
   </div>
 </div>
 <script type="text/javascript" src="index.js"></script>
 <script>
-  var node = document.getElementById('elm');
-  var app = Elm.Main.init({
-    node: node,
-    flags: 1
-  });
+  function playGame() {
+    var node = document.getElementById('elm');
+    var app = Elm.Main.init({
+      node: node,
+      flags: 1
+    });
+  }
 </script>
 </body>
 </html>
